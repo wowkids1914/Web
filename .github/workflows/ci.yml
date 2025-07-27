@@ -16,6 +16,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         job_id: [1, 2, 3, 4, 5]
     steps:
