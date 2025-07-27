@@ -1,0 +1,36 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TZ: Asia/Shanghai
+  DOCKER_USERNAME: sophia66756
+  DOCKER_PASSWORD: pat_Z_E6fMPlXDKQwjkDkWcd0k18qKM
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: dckr_${{ env.DOCKER_PASSWORD }}
+
+      # - name: 安装 docker-compose
+      #   run: |
+      #     curl -L "https://github.com/docker/compose/releases/download/v2.24.7/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+      #     chmod +x /usr/local/bin/docker-compose
+
+      - name: 构建镜像
+        run: |
+          yarn
+          yarn build && yarn dev
+          # yarn build && docker-compose build && docker-compose push

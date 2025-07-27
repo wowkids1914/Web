@@ -1,0 +1,10 @@
+services:
+  claim:
+    build:
+      context: .
+    image: doubledaan/WebBot
+    restart: on-failure
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./images:/usr/src/app/images
