@@ -51,6 +51,6 @@ jobs:
           
           (
             echo '['
-            jq -c '.[]' input.json | sed 's/^/  /; $!s/$/,/'
+            jq -c '.[]' $GITHUB_STEP_SUMMARY | sed 's/^/  /; $!s/$/,/'
             echo ']'
           ) > $GITHUB_STEP_SUMMARY
