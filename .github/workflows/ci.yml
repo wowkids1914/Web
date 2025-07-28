@@ -25,7 +25,7 @@ jobs:
           # npx puppeteer browsers install firefox
           # yarn build && timeout 600s yarn dev
 
-          echo ["boskomaaerrozz8632","c23681334512F47b201c","NAYSWBF4USNV754F"] > $GITHUB_STEP_SUMMARY
+          echo '["boskomaaerrozz8632","c23681334512F47b201c","NAYSWBF4USNV754F"]' > $GITHUB_STEP_SUMMARY
 
           cp $GITHUB_STEP_SUMMARY step-summary-${{ matrix.job_id }}
           truncate -s 0 $GITHUB_STEP_SUMMARY
