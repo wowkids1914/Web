@@ -118,8 +118,8 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     logger.info("Outlook 邮箱地址", outlookMail);
 
     {
-        console.log('Viewport:', page.viewport());
-    const viewportSize = await page.evaluate(() => ({
+        console.log('Viewport:', outlookPage.viewport());
+    const viewportSize = await outlookPage.evaluate(() => ({
     width: window.innerWidth,
     height: window.innerHeight
   }));
