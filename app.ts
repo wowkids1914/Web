@@ -316,12 +316,21 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     await usernameElement.type(userMail.split('@')[0]);
 
     {
-        console.log('Viewport:', page.viewport());
-    const viewportSize = await page.evaluate(() => ({
+        console.log('Viewport:', outlookPage.viewport());
+    const viewportSize = await outlookPage.evaluate(() => ({
     width: window.innerWidth,
     height: window.innerHeight
   }));
   console.log('实际视口大小:', viewportSize);
+
+  await page.setViewport({ width: 1920, height: 1080 });
+
+  console.log('Viewport2:', page.viewport());
+    const viewportSize2 = await page.evaluate(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight
+  }));
+  console.log('实际视口大小2:', viewportSize2);
     }
 
     while (true) {
