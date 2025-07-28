@@ -49,8 +49,8 @@ jobs:
         run: |
           # cat summaries/step-summary-*/* > $GITHUB_STEP_SUMMARY
           
-          echo "[" > $GITHUB_STEP_SUMMARY
-          sed 's/$/,/' summaries/step-summary-*/* | sed '$ s/,$//' >> $GITHUB_STEP_SUMMARY
-          echo "]" >> $GITHUB_STEP_SUMMARY
-
-          python -m json.tool $GITHUB_STEP_SUMMARY
+          (
+            echo '['
+            jq -c '.[]' input.json | sed 's/^/  /; $!s/$/,/'
+            echo ']'
+          ) > $GITHUB_STEP_SUMMARY
