@@ -367,6 +367,12 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
     if (frame) {
         logger.info("需要验证");
+
+        if (headless) {
+            logger.error("无法自动验证");
+            process.exit(1);
+        }
+
         await (await frame.$x("//button[contains(., 'Visual puzzle')]")).click();
         await frame.$x("//button[contains(., 'Submit')]");
         logger.info("等待验证真人");

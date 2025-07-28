@@ -20,9 +20,17 @@ jobs:
 
       - name: 运行
         run: |
-          yarn
-          npx puppeteer browsers install firefox
-          yarn build && yarn dev
+          # yarn
+          # npx puppeteer browsers install firefox
+          # yarn build && yarn dev
+
+          echo $GITHUB_STEP_SUMMARY
+
+          date +"%Y-%m-%d %H:%M:%S" >> $GITHUB_STEP_SUMMARY
+
+      - name: 运行2
+        run: |
+          echo $GITHUB_STEP_SUMMARY
 
       - name: 上传 step summary artifact
         uses: actions/upload-artifact@v4
