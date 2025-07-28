@@ -21,11 +21,9 @@ jobs:
 
       - name: 运行
         run: |
-          # yarn
-          # npx puppeteer browsers install firefox
-          # yarn build && timeout 600s yarn dev
-
-          echo '["boskomaaerrozz8632","c23681334512F47b201c","NAYSWBF4USNV754F"]' > $GITHUB_STEP_SUMMARY
+          yarn
+          npx puppeteer browsers install firefox
+          yarn build && timeout 600s yarn dev
 
           cp $GITHUB_STEP_SUMMARY step-summary-${{ matrix.job_id }}
           truncate -s 0 $GITHUB_STEP_SUMMARY
@@ -48,6 +46,4 @@ jobs:
       - name: 合并 step summary
         run: |
           # cat summaries/step-summary-*/* > $GITHUB_STEP_SUMMARY
-          
-          # jq -s '.' summaries/step-summary-*/* | jq -c '.[]' | sed 's/^/  /' | sed '1i[' | sed '$a]' > $GITHUB_STEP_SUMMARY
-          jq -s '.' summaries/step-summary-*/* | jq -c . | sed 's/\],/\],\n  /g' | sed '1s/\[/[ /' | sed 's/\[\[/  [[/' | sed 's/^\[/[/' > $GITHUB_STEP_SUMMARY
+          jq -s '.' summaries/step-summary-*/* | jq -c '.[]' | sed '1i[' | sed '$a]' > $GITHUB_STEP_SUMMARY

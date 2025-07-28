@@ -461,7 +461,8 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     await (await page.$x("//button[normalize-space(text())='Generate token']")).click();
     const token = await page.textContent("//code[@id='new-oauth-token']");
 
-    const data = ["", `# ${new Date().toString()}`, JSON.stringify([account, password, otpSecret]), `GITHUB_USERNAME=${account}`, `GITHUB_PASSWORD=${password}`, `GITHUB_SECRET=${otpSecret}`, `# https://${token}@github.com/${account}/${account}.git`, ""].join('\n');
+    // const data = ["", `# ${new Date().toString()}`, JSON.stringify([account, password, otpSecret]), `GITHUB_USERNAME=${account}`, `GITHUB_PASSWORD=${password}`, `GITHUB_SECRET=${otpSecret}`, `# https://${token}@github.com/${account}/${account}.git`, ""].join('\n');
+    const data = JSON.stringify([account, password, otpSecret, new Date().toString()]);
     Utility.appendStepSummary(data);
 
     await chrome.close();
