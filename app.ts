@@ -265,7 +265,8 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     const firefox = await puppeteer.launch({
         browser: "firefox",
         headless,
-        defaultViewport: null,//自适应
+        // defaultViewport: null,//自适应
+        defaultViewport: { width: 1920, height: 1080 },
         protocolTimeout: MAX_TIMEOUT,
         slowMo: 10,
         args: [
