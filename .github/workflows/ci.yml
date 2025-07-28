@@ -1,5 +1,3 @@
-name: Build and Push Docker Image
-
 on:
   push:
 
@@ -9,11 +7,9 @@ concurrency:
 
 env:
   TZ: Asia/Shanghai
-  DOCKER_USERNAME: sophia66756
-  DOCKER_PASSWORD: pat_Z_E6fMPlXDKQwjkDkWcd0k18qKM
 
 jobs:
-  build-and-push:
+  job:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -22,20 +18,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - uses: docker/login-action@v3
-      #   with:
-      #     username: ${{ env.DOCKER_USERNAME }}
-      #     password: dckr_${{ env.DOCKER_PASSWORD }}
-
       - name: 运行
         run: |
           yarn
           npx puppeteer browsers install firefox
           yarn build && yarn dev
 
-      # - name: 上传 images 文件夹
-      #   if: ${{ always() && hashFiles('images/**') != '' }}
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: images-folder-${{ matrix.job_id }}
-      #     path: images
+      - name: 上传 step summary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: step-summary-${{ matrix.job_id }}
+          path: $GITHUB_STEP_SUMMARY
+
+  collect-summary:
+    runs-on: ubuntu-latest
+    needs: job
+    steps:
+      - name: 下载所有 job 的 step summary
+        uses: actions/download-artifact@v4
+        with:
+          path: summaries
+
+      - name: 合并 step summary
+        run: |
+          cat summaries/step-summary-*/_github_step_summary.md > $GITHUB_STEP_SUMMARY

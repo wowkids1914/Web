@@ -117,15 +117,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     const outlookMail = await outlookPage.textContent("//div[@id='identityBadge']");
     logger.info("Outlook 邮箱地址", outlookMail);
 
-    {
-        console.log('Viewport:', outlookPage.viewport());
-    const viewportSize = await outlookPage.evaluate(() => ({
-    width: window.innerWidth,
-    height: window.innerHeight
-  }));
-  console.log('实际视口大小:', viewportSize);
-    }
-
     await (await outlookPage.$x("//input[@type='password']")).type(password);
     await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
 
@@ -169,11 +160,16 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
         if (outlookPage.url() == "https://outlook.live.com/mail/0/")
             break;
+
+        if (process.uptime() > 300) {
+            logger.error("验证失败");
+            process.exit(1);
+        }
     }
 
     logger.info("验证通过", outlookPage.url());
     await outlookPage.$x("//span[@id='EmptyState_MainMessage']", { timeout: MAX_TIMEOUT });
-    logger.info(`邮箱创建完成，耗时${process.uptime()}秒`);
+    logger.info(`邮箱创建完成，耗时${Math.round(process.uptime())}秒`);
 
     // const protonPage = await chrome.newPage();
     // await protonPage.goto("https://account.proton.me/mail/signup?plan=free");
@@ -270,6 +266,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     // logger.info("Proton Mail 设置完成");
 
     const userMail = typeof protonMail != "undefined" ? protonMail : outlookMail;
+    const mailPage = typeof protonPage != "undefined" ? protonPage : outlookPage;
 
     const firefox = await puppeteer.launch({
         browser: "firefox",
@@ -309,29 +306,19 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     });
 
     const [page] = await firefox.pages();
+
+    const viewportSize = await mailPage.evaluate(() => ({
+        width: window.innerWidth,
+        height: window.innerHeight
+    }));
+
+    await page.setViewport(viewportSize);
+
     await page.goto("https://github.com/signup");
     await (await page.$x("//input[@placeholder='Email']")).type(userMail);
     await (await page.$x("//input[@placeholder='Password']")).type(password);
     const usernameElement = await page.$x("//input[@placeholder='Username']");
     await usernameElement.type(userMail.split('@')[0]);
-
-    {
-        console.log('Viewport:', outlookPage.viewport());
-    const viewportSize = await outlookPage.evaluate(() => ({
-    width: window.innerWidth,
-    height: window.innerHeight
-  }));
-  console.log('实际视口大小:', viewportSize);
-
-  await page.setViewport({ width: 1920, height: 1080 });
-
-  console.log('Viewport2:', page.viewport());
-    const viewportSize2 = await page.evaluate(() => ({
-    width: window.innerWidth,
-    height: window.innerHeight
-  }));
-  console.log('实际视口大小2:', viewportSize2);
-    }
 
     while (true) {
         const button = await page.$x("//button[contains(., 'Create account')]");
@@ -392,7 +379,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
     await page.$x("//h2[text()='Confirm your email address']", { timeout: MAX_TIMEOUT });
     logger.info("等待验证邮件");
-    const mailPage = typeof protonPage != "undefined" ? protonPage : outlookPage;
     await mailPage.bringToFront();
     await (await mailPage.$x("//span[text()='🚀 Your GitHub launch code']")).click();
     logger.info("收到验证邮件");
@@ -470,8 +456,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     const token = await page.textContent("//code[@id='new-oauth-token']");
 
     const data = ["", `# ${new Date().toString()}`, JSON.stringify([account, password, otpSecret]), `GITHUB_USERNAME=${account}`, `GITHUB_PASSWORD=${password}`, `GITHUB_SECRET=${otpSecret}`, `# https://${token}@github.com/${account}/${account}.git`, ""].join('\n');
-    logger.info(data);
-    fs.appendFileSync("../VirtualMachine/.env.development", data);
+    Utility.appendStepSummary(data);
 
     await chrome.close();
     await firefox.close();
