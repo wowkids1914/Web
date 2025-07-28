@@ -24,19 +24,16 @@ jobs:
           # npx puppeteer browsers install firefox
           # yarn build && yarn dev
 
-          echo $GITHUB_STEP_SUMMARY
+          echo "hahaha" > $GITHUB_STEP_SUMMARY
+          cp $GITHUB_STEP_SUMMARY step-summary-${{ matrix.job_id }}
 
-          date +"%Y-%m-%d %H:%M:%S" >> $GITHUB_STEP_SUMMARY
-
-      - name: 运行2
-        run: |
-          echo $GITHUB_STEP_SUMMARY
+          exit 1
 
       - name: 上传 step summary artifact
         uses: actions/upload-artifact@v4
         with:
           name: step-summary-${{ matrix.job_id }}
-          path: $GITHUB_STEP_SUMMARY
+          path: step-summary-${{ matrix.job_id }}
 
   collect-summary:
     runs-on: ubuntu-latest
