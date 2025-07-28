@@ -49,8 +49,4 @@ jobs:
         run: |
           # cat summaries/step-summary-*/* > $GITHUB_STEP_SUMMARY
           
-          (
-            echo '['
-            jq -c '.[]' $GITHUB_STEP_SUMMARY | sed 's/^/  /; $!s/$/,/'
-            echo ']'
-          ) > $GITHUB_STEP_SUMMARY
+          jq -s '.' summaries/step-summary-*/* | jq -c '.[]' | sed '1i[' | sed '$a]' > $GITHUB_STEP_SUMMARY
