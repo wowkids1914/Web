@@ -296,6 +296,8 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         for (let i = 0; i < pages.length; i++) {
             await pages[i].screenshot({ path: `./images/unhandledRejection-${timestamp}-${i + 1}.png` });
         }
+
+        process.exit(1);
     });
 
     const [page] = await firefox.pages();
