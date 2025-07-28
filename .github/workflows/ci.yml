@@ -30,6 +30,7 @@ jobs:
       - name: 运行
         run: |
           yarn
+          npx puppeteer browsers install firefox
           yarn build && yarn dev
 
       # - name: 上传 images 文件夹

@@ -164,7 +164,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
     logger.info("验证通过", outlookPage.url());
     await outlookPage.$x("//span[@id='EmptyState_MainMessage']", { timeout: MAX_TIMEOUT });
-    logger.info("邮箱创建完成");
+    logger.info(`邮箱创建完成，耗时${process.uptime()}秒`);
 
     // const protonPage = await chrome.newPage();
     // await protonPage.goto("https://account.proton.me/mail/signup?plan=free");
