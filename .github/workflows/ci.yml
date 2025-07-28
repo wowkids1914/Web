@@ -49,4 +49,5 @@ jobs:
         run: |
           # cat summaries/step-summary-*/* > $GITHUB_STEP_SUMMARY
           files=(summaries/step-summary-*/*)
-          jq -c -s '.' "${files[@]}" > $GITHUB_STEP_SUMMARY
+          # jq -c -s '.' "${files[@]}" > $GITHUB_STEP_SUMMARY
+          jq -s '.' "${files[@]}" | jq '.' > $GITHUB_STEP_SUMMARY
