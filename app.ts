@@ -117,6 +117,15 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     const outlookMail = await outlookPage.textContent("//div[@id='identityBadge']");
     logger.info("Outlook 邮箱地址", outlookMail);
 
+    {
+        console.log('Viewport:', page.viewport());
+    const viewportSize = await page.evaluate(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight
+  }));
+  console.log('实际视口大小:', viewportSize);
+    }
+
     await (await outlookPage.$x("//input[@type='password']")).type(password);
     await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
 
@@ -265,8 +274,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     const firefox = await puppeteer.launch({
         browser: "firefox",
         headless,
-        // defaultViewport: null,//自适应
-        defaultViewport: { width: 1920, height: 1080 },
+        defaultViewport: null,//自适应
         protocolTimeout: MAX_TIMEOUT,
         slowMo: 10,
         args: [
@@ -306,6 +314,15 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     await (await page.$x("//input[@placeholder='Password']")).type(password);
     const usernameElement = await page.$x("//input[@placeholder='Username']");
     await usernameElement.type(userMail.split('@')[0]);
+
+    {
+        console.log('Viewport:', page.viewport());
+    const viewportSize = await page.evaluate(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight
+  }));
+  console.log('实际视口大小:', viewportSize);
+    }
 
     while (true) {
         const button = await page.$x("//button[contains(., 'Create account')]");
