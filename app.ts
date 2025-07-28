@@ -157,11 +157,12 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     );
 
     await outlookPage.mouse.down();
-    await Utility.waitForSeconds(15);
+    await Utility.waitForSeconds(10);
     await outlookPage.mouse.up();
 
     if (!await outlookPage.waitForNavigation({ timeout: 30_000 })) {
         logger.info("导航超时认为是验证失败");
+        await outlookPage.screenshot({ path: 'images/waitForNavigation.png' });
         process.exit(1);
     }
 
