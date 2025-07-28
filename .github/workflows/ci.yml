@@ -48,7 +48,7 @@ jobs:
       - name: 合并 step summary
         run: |
           # cat summaries/step-summary-*/* > $GITHUB_STEP_SUMMARY
-          
+
           echo "[" > $GITHUB_STEP_SUMMARY
-          sed 's/$/,/' summaries/step-summary-*/* | sed '$ s/,$//' >> $GITHUB_STEP_SUMMARY
+          sed 's/^/  /' summaries/step-summary-*/* | sed '$!s/$/,/' >> $GITHUB_STEP_SUMMARY
           echo "]" >> $GITHUB_STEP_SUMMARY
