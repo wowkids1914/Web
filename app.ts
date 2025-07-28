@@ -163,6 +163,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     if (!await outlookPage.waitForNavigation({ timeout: 30_000 })) {
         logger.info("导航超时认为是验证失败");
         await outlookPage.screenshot({ path: 'images/waitForNavigation.png' });
+        logger.info("文件是否存在",fs.existsSync('images/waitForNavigation.png'));
         process.exit(1);
     }
 
