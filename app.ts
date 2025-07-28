@@ -132,7 +132,12 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
 
     logger.info("等待验证真人");
-    await outlookPage.waitForSelector("//span[text()='Press and hold the button.']", { timeout: MAX_TIMEOUT });
+    const x = await outlookPage.waitForSelector("//span[text()='Press and hold the button.']", { timeout: 30_000 });
+    if(!x){
+        await outlookPage.screenshot({ path: 'images/Press.png' });
+        process.exit();
+    }
+        
     const button = await outlookPage.$x("//span[text()='Press and hold the button.']");
     const rect = await outlookPage.evaluate(el => {
         const { x, y, width, height } = el.getBoundingClientRect();

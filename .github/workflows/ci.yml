@@ -37,3 +37,10 @@ jobs:
           yarn
           yarn build && yarn dev
           # yarn build && docker-compose build && docker-compose push
+
+      - name: 上传 images 文件夹
+        if: ${{ hashFiles('images/**') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: images-folder
+          path: images
