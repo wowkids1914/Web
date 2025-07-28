@@ -2,7 +2,6 @@ import './loadEnv.js';
 import './patches.js';
 import Utility from "./Utility.js";
 import os from 'os';
-import fs from 'fs';
 import axios from 'axios';
 import puppeteer, { Browser, Page } from 'puppeteer';
 import logger from './logger.js';
@@ -13,7 +12,7 @@ import { authenticator } from 'otplib';
 
 declare const protonMail: string;
 declare const protonPage: Page;
-declare let firefox: Browser;
+declare const firefox: Browser;
 
 const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
@@ -292,7 +291,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     const userMail = typeof protonMail != "undefined" ? protonMail : outlookMail;
     const mailPage = typeof protonPage != "undefined" ? protonPage : outlookPage;
 
-    firefox = await puppeteer.launch({
+    const firefox = await puppeteer.launch({
         browser: "firefox",
         headless,
         defaultViewport: null,//自适应
