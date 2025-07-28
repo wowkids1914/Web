@@ -52,6 +52,8 @@ jobs:
           # jq -c -s '.' "${files[@]}" > $GITHUB_STEP_SUMMARY
           # jq -s '.' "${files[@]}" | jq '.' > $GITHUB_STEP_SUMMARY
 
-          echo "[" > $GITHUB_STEP_SUMMARY
-          paste -sd, summaries/step-summary-*/* >> $GITHUB_STEP_SUMMARY
-          echo "]" >> $GITHUB_STEP_SUMMARY
+          # echo "[" > $GITHUB_STEP_SUMMARY
+          # paste -sd, summaries/step-summary-*/* >> $GITHUB_STEP_SUMMARY
+          # echo "]" >> $GITHUB_STEP_SUMMARY
+
+          jq -s '.' "${files[@]}" | jq -c '.[]' | paste -sd '\n' - | sed '1s/^/[/' | sed '$s/$/\n]/' > $GITHUB_STEP_SUMMARY
