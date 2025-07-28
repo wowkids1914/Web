@@ -48,5 +48,5 @@ jobs:
       - name: 合并 step summary
         run: |
           # cat summaries/step-summary-*/* > $GITHUB_STEP_SUMMARY
-          ARRAY=$(find summaries -type f | xargs -I {} sh -c "cat {} | tr -d '\n' | xargs echo" | jq -R -s 'split("\n")[:-1]')
-          echo "$ARRAY" > $GITHUB_STEP_SUMMARY
+          files=(summaries/step-summary-*/*)
+          jq -s '.' "${files[@]}" > $GITHUB_STEP_SUMMARY
