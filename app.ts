@@ -141,26 +141,28 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
     await Utility.waitForSeconds(5);
 
-    logger.info("模拟移动鼠标");
+    while (true) {
+        logger.info("模拟移动鼠标");
 
-    await Utility.humanLikeMouseMove(
-        outlookPage.mouse,
-        { x: rect.x, y: rect.y },
-        { x: rect.x + Math.random() * rect.width, y: rect.y + 70 },
-        40
-    );
+        await Utility.humanLikeMouseMove(
+            outlookPage.mouse,
+            { x: rect.x + Math.random() * rect.width, y: rect.y + Math.random() * rect.height },
+            { x: rect.x + Math.random() * rect.width, y: rect.y + 70 },
+            40
+        );
 
-    await outlookPage.mouse.down();
-    await Utility.waitForSeconds(10);
-    await outlookPage.mouse.up();
+        await outlookPage.mouse.down();
+        await Utility.waitForSeconds(10);
+        await outlookPage.mouse.up();
 
-    if (!await outlookPage.waitForNavigation({ timeout: 30_000 })) {
-        logger.info("导航超时认为是验证失败");
-        Utility.appendStepSummary(`![页面截图](data:image/png;base64,${await outlookPage.screenshot({ encoding: "base64" })})`);
-        process.exit(1);
+        if (await outlookPage.waitForNavigation({ timeout: 10_000 }))
+            break;
+
+        if (outlookPage.url() == "https://outlook.live.com/mail/0/")
+            break;
     }
 
-    logger.info("验证通过");
+    logger.info("验证通过", outlookPage.url());
     await outlookPage.$x("//span[@id='EmptyState_MainMessage']", { timeout: MAX_TIMEOUT });
     logger.info("邮箱创建完成");
 
