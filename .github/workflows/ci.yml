@@ -45,4 +45,4 @@ jobs:
 
       - name: 合并 step summary
         run: |
-          cat summaries/step-summary-* > $GITHUB_STEP_SUMMARY
+          cat summaries/step-summary-*/* > $GITHUB_STEP_SUMMARY
