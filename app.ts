@@ -39,8 +39,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             '--window-size=1920,1080',
             '--disable-blink-features=AutomationControlled',
             // headless 模式下，Puppeteer 的默认 User-Agent 会包含 "HeadlessChrome" 字样，容易被识别为机器人。
-            // '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
-            '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
@@ -133,12 +132,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
 
     logger.info("等待验证真人");
-    const x = await outlookPage.waitForSelector("//span[text()='Press and hold the button.']", { timeout: 30_000 });
-    if(!x){
-        await outlookPage.screenshot({ path: 'images/Press.png' });
-        process.exit();
-    }
-        
+    await outlookPage.waitForSelector("//span[text()='Press and hold the button.']", { timeout: MAX_TIMEOUT });
     const button = await outlookPage.$x("//span[text()='Press and hold the button.']");
     const rect = await outlookPage.evaluate(el => {
         const { x, y, width, height } = el.getBoundingClientRect();
@@ -162,8 +156,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
     if (!await outlookPage.waitForNavigation({ timeout: 30_000 })) {
         logger.info("导航超时认为是验证失败");
-        await outlookPage.screenshot({ path: 'images/waitForNavigation.png' });
-        logger.info("文件是否存在",fs.existsSync('images/waitForNavigation.png'));
+        Utility.appendStepSummary(`![页面截图](data:image/png;base64,${await outlookPage.screenshot({ encoding: "base64" })})`);
         process.exit(1);
     }
 

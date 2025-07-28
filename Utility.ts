@@ -34,6 +34,13 @@ export default class Utility {
         }
     }
 
+    static appendStepSummary(data: string, logFunc: (_: string) => void = logger.info) {
+        const { GITHUB_STEP_SUMMARY } = process.env;
+        data = typeof data == "string" ? data : JSON.stringify(data, null, 4);
+        GITHUB_STEP_SUMMARY && fs.appendFileSync(GITHUB_STEP_SUMMARY, data + "\n");
+        logFunc(data);
+    }
+
     static async humanLikeMouseMove(mouse: Mouse, from: { x: number, y: number }, to: { x: number, y: number }, steps = 30) {
         const { x: startX, y: startY } = from;
         const { x: endX, y: endY } = to;

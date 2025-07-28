@@ -27,16 +27,10 @@ jobs:
           username: ${{ env.DOCKER_USERNAME }}
           password: dckr_${{ env.DOCKER_PASSWORD }}
 
-      # - name: 安装 docker-compose
-      #   run: |
-      #     curl -L "https://github.com/docker/compose/releases/download/v2.24.7/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-      #     chmod +x /usr/local/bin/docker-compose
-
-      - name: 构建镜像
+      - name: 运行
         run: |
           yarn
           yarn build && yarn dev
-          # yarn build && docker-compose build && docker-compose push
 
       - name: 上传 images 文件夹
         if: ${{ always() && hashFiles('images/**') != '' }}
