@@ -4,7 +4,7 @@ import Utility from "./Utility.js";
 import os from 'os';
 import fs from 'fs';
 import axios from 'axios';
-import puppeteer, { Page } from 'puppeteer';
+import puppeteer, { Browser, Page } from 'puppeteer';
 import logger from './logger.js';
 import { Wallet } from "ethers";
 import { faker } from '@faker-js/faker';
@@ -13,20 +13,11 @@ import { authenticator } from 'otplib';
 
 declare const protonMail: string;
 declare const protonPage: Page;
+declare let firefox: Browser;
 
 const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
 (async () => {
-    process.on('SIGTERM', async () => {
-        // docker-compose down/stop 会触发 SIGTERM 信号
-        logger.info('SIGTERM: 终止请求');
-        process.exit();
-    });
-
-    // process.on("uncaughtException", (e: Error) => {
-    //     logger.error("未捕获的异常", e);
-    // });
-
     const headless = os.platform() == 'linux';
 
     const chrome = await puppeteer.launch({
@@ -52,6 +43,35 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     });
 
     logger.info(chrome.process().spawnfile, await chrome.version(), chrome.wsEndpoint());
+
+    async function screenshotAllPages() {
+        const timestamp = new Date().toString().replace(/[:.]/g, '-');
+
+        const pages = await chrome.pages();
+        for (let i = 0; i < pages.length; i++) {
+            await pages[i].screenshot({ path: `./images/chrome-${timestamp}-${i + 1}.png` });
+        }
+
+        if (typeof firefox != "undefined") {
+            const pages = await firefox.pages();
+            for (let i = 0; i < pages.length; i++) {
+                await pages[i].screenshot({ path: `./images/firefox-${timestamp}-${i + 1}.png` });
+            }
+        }
+    }
+
+    process.on('SIGTERM', async () => {
+        // timeout docker-compose down/stop 会触发 SIGTERM 信号
+        logger.info('SIGTERM: 终止请求');
+        await screenshotAllPages();
+        process.exit();
+    });
+
+    process.on("unhandledRejection", async (e: Error) => {
+        logger.error("未处理的拒绝", e);
+        await screenshotAllPages();
+        process.exit(1);
+    });
 
     const { PROTONMAIL_USERNAME, PROTONMAIL_PASSWORD } = process.env;
     if (PROTONMAIL_USERNAME && PROTONMAIL_PASSWORD) {
@@ -132,7 +152,11 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
 
     logger.info("等待验证真人");
-    await outlookPage.waitForSelector("//span[text()='Press and hold the button.']", { timeout: MAX_TIMEOUT });
+    if (!await outlookPage.$x("//span[text()='Press and hold the button.']", { timeout: 30_000 })) {
+        await screenshotAllPages();
+        process.exit(1);
+    }
+
     const button = await outlookPage.$x("//span[text()='Press and hold the button.']");
     const rect = await outlookPage.evaluate(el => {
         const { x, y, width, height } = el.getBoundingClientRect();
@@ -268,7 +292,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     const userMail = typeof protonMail != "undefined" ? protonMail : outlookMail;
     const mailPage = typeof protonPage != "undefined" ? protonPage : outlookPage;
 
-    const firefox = await puppeteer.launch({
+    firefox = await puppeteer.launch({
         browser: "firefox",
         headless,
         defaultViewport: null,//自适应
@@ -292,18 +316,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     });
 
     logger.info(firefox.process().spawnfile, await firefox.version(), firefox.wsEndpoint());
-
-    process.on("unhandledRejection", async (e: Error) => {
-        logger.error("未处理的拒绝", e);
-
-        const timestamp = new Date().toString().replace(/[:.]/g, '-');
-        const pages = await firefox.pages();
-        for (let i = 0; i < pages.length; i++) {
-            await pages[i].screenshot({ path: `./images/unhandledRejection-${timestamp}-${i + 1}.png` });
-        }
-
-        process.exit(1);
-    });
 
     const [page] = await firefox.pages();
 
@@ -376,14 +388,15 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         await (await frame.$x("//button[contains(., 'Visual puzzle')]")).click();
         await frame.$x("//button[contains(., 'Submit')]");
         logger.info("等待验证真人");
+        await page.$x("//h2[text()='Confirm your email address']", { timeout: MAX_TIMEOUT });
+    }
+    else {
+        if (!await page.$x("//h2[text()='Confirm your email address']", { timeout: 30_000 })) {
+            await screenshotAllPages();
+            process.exit(1);
+        }
     }
 
-    // for (let i = 1; i <= 8; i++) {
-    //     const img = await frame.$x(`//img[@aria-label="Image ${i} of 8."]`);
-    //     await img.screenshot({ path: `image${i}.png` });
-    // }
-
-    await page.$x("//h2[text()='Confirm your email address']", { timeout: MAX_TIMEOUT });
     logger.info("等待验证邮件");
     await mailPage.bringToFront();
     await (await mailPage.$x("//span[text()='🚀 Your GitHub launch code']")).click();
@@ -440,6 +453,16 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     logger.info("成功设置2FA");
 
     await (await page.$x("//button[contains(., 'Done')]")).click();
+
+    if (headless) {
+        const data = JSON.stringify([account, password, otpSecret, new Date().toString()]);
+        Utility.appendStepSummary(data);
+
+        await chrome.close();
+        await firefox.close();
+        return;
+    }
+
     await (await page.$x("//a[@href='/settings/apps']")).click();// Developer settings
     await Utility.waitForSeconds(1);
     await (await page.$x("//button[@id='personal-access-tokens-menu-item']")).click();
@@ -461,10 +484,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     await (await page.$x("//button[normalize-space(text())='Generate token']")).click();
     const token = await page.textContent("//code[@id='new-oauth-token']");
 
-    // const data = ["", `# ${new Date().toString()}`, JSON.stringify([account, password, otpSecret]), `GITHUB_USERNAME=${account}`, `GITHUB_PASSWORD=${password}`, `GITHUB_SECRET=${otpSecret}`, `# https://${token}@github.com/${account}/${account}.git`, ""].join('\n');
-    const data = JSON.stringify([account, password, otpSecret, new Date().toString()]);
-    Utility.appendStepSummary(data);
-
-    await chrome.close();
-    await firefox.close();
+    const data = ["", `# ${new Date().toString()}`, JSON.stringify([account, password, otpSecret]), `GITHUB_USERNAME=${account}`, `GITHUB_PASSWORD=${password}`, `GITHUB_SECRET=${otpSecret}`, `# https://${token}@github.com/${account}/${account}.git`, ""].join('\n');
+    logger.info(data);
 })();

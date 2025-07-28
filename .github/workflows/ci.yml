@@ -23,16 +23,23 @@ jobs:
         run: |
           yarn
           npx puppeteer browsers install firefox
-          yarn build && timeout 600s yarn dev
+          yarn build && timeout 360s yarn dev
 
-          cp $GITHUB_STEP_SUMMARY step-summary-${{ matrix.job_id }}
+          cp $GITHUB_STEP_SUMMARY step-summary
           truncate -s 0 $GITHUB_STEP_SUMMARY
 
       - name: 上传 step summary artifact
         uses: actions/upload-artifact@v4
         with:
           name: step-summary-${{ matrix.job_id }}
-          path: step-summary-${{ matrix.job_id }}
+          path: step-summary
+
+      - name: 上传 images 文件夹
+        if: ${{ hashFiles('images/**') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: images-${{ matrix.job_id }}
+          path: images/
 
   collect-summary:
     runs-on: ubuntu-latest
