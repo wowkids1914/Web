@@ -23,9 +23,9 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         process.exit();
     });
 
-    process.on("uncaughtException", (e: Error) => {
-        logger.error("未捕获的异常", e);
-    });
+    // process.on("uncaughtException", (e: Error) => {
+    //     logger.error("未捕获的异常", e);
+    // });
 
     const headless = os.platform() == 'linux';
 
