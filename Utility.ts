@@ -1,4 +1,6 @@
+import fs from 'fs';
 import { Mouse } from "puppeteer";
+import logger from './logger.js';
 
 export default class Utility {
     static async waitForSeconds(delay: number) {
