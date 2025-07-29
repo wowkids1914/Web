@@ -162,6 +162,9 @@ let firefox: Browser;
         process.exit(1);
     }
 
+    await screenshotAllPages();
+    process.exit(1);
+
     const button = await outlookPage.$x("//span[text()='Press and hold the button.']");
     const rect = await outlookPage.evaluate(el => {
         const { x, y, width, height } = el.getBoundingClientRect();
