@@ -49,19 +49,21 @@ let firefox: Browser;
             const timestamp = new Date().toString().replace(/[:.]/g, '-');
 
             const pages = await chrome.pages();
+            logger.info("chrome", pages.length);
             for (let i = 0; i < pages.length; i++) {
                 await pages[i].screenshot({ path: `./images/chrome-${timestamp}-${i + 1}.png` });
             }
 
             if (firefox) {
                 const pages = await firefox.pages();
+                logger.info("firefox", pages.length);
                 for (let i = 0; i < pages.length; i++) {
                     await pages[i].screenshot({ path: `./images/firefox-${timestamp}-${i + 1}.png` });
                 }
             }
         }
         catch (e) {
-            logger.error(e);
+            logger.error("screenshotAllPages", e);
         }
     }
 
@@ -159,11 +161,6 @@ let firefox: Browser;
     logger.info("等待验证真人");
     if (!await outlookPage.$x("//span[text()='Press and hold the button.']", { timeout: 30_000 })) {
         await screenshotAllPages();
-        process.exit(1);
-    }
-
-    Math.random() < 0.5 && await screenshotAllPages();
-    if(outlookPage){
         process.exit(1);
     }
 
