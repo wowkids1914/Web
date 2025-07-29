@@ -39,7 +39,7 @@ jobs:
           path: step-summary
 
       - name: 上传 images 文件夹
-        if: hashFiles('images/**') != ''
+        if: always() && hashFiles('images/**') != ''
         uses: actions/upload-artifact@v4
         with:
           name: images-${{ matrix.job_id }}
