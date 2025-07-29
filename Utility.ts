@@ -43,16 +43,47 @@ export default class Utility {
         logFunc(data);
     }
 
-    static async humanLikeMouseMove(mouse: Mouse, from: { x: number, y: number }, to: { x: number, y: number }, steps = 30) {
+    static async humanLikeMouseMove(
+        mouse: Mouse,
+        from: { x: number, y: number },
+        to: { x: number, y: number },
+        steps = 40
+    ) {
         const { x: startX, y: startY } = from;
         const { x: endX, y: endY } = to;
+
+        // 使用二次贝塞尔曲线，增加中间控制点的偏移量
+        const cx = startX + (endX - startX) / 2 + (Math.random() - 0.5) * 80;
+        const cy = startY + (endY - startY) / 2 + (Math.random() - 0.5) * 80;
+
         for (let i = 1; i <= steps; i++) {
-            const progress = i / steps;
-            // 贝塞尔曲线或简单插值
-            const x = startX + (endX - startX) * progress + (Math.random() - 0.5) * 2;
-            const y = startY + (endY - startY) * progress + (Math.random() - 0.5) * 2;
+            // easeInOutQuad缓动
+            let t = i / steps;
+            t = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+
+            // 二次贝塞尔曲线
+            const x =
+                (1 - t) * (1 - t) * startX +
+                2 * (1 - t) * t * cx +
+                t * t * endX +
+                (Math.random() - 0.5) * 1.2; // 轻微抖动
+            const y =
+                (1 - t) * (1 - t) * startY +
+                2 * (1 - t) * t * cy +
+                t * t * endY +
+                (Math.random() - 0.5) * 1.2;
+
             await mouse.move(x, y);
-            await new Promise(r => setTimeout(r, Math.random() * 10 + 5)); // 随机延迟
+
+            // 间隔时间模拟加速减速
+            const baseDelay = 5 + 15 * (1 - Math.cos(Math.PI * t)) / 2;
+            const jitter = Math.random() * 6;
+            await new Promise(r => setTimeout(r, baseDelay + jitter));
+
+            // 偶尔小停顿
+            if (Math.random() < 0.02) {
+                await new Promise(r => setTimeout(r, 50 + Math.random() * 100));
+            }
         }
     }
 }
