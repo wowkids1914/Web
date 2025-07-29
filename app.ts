@@ -52,7 +52,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
                 await pages[i].screenshot({ path: `./images/chrome-${timestamp}-${i + 1}.png` });
             }
 
-            if (typeof firefox != "undefined") {
+            if (typeof firefox != "undefined" && firefox) {
                 const pages = await firefox.pages();
                 for (let i = 0; i < pages.length; i++) {
                     await pages[i].screenshot({ path: `./images/firefox-${timestamp}-${i + 1}.png` });
