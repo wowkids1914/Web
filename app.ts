@@ -159,8 +159,10 @@ let firefox: Browser;
     await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
 
     logger.info("等待验证真人");
-    if (!await outlookPage.$x("//span[text()='Press and hold the button.']", { timeout: 30_000 })) {
-        await screenshotAllPages();
+
+    const title = await outlookPage.textContent(`//h1[text()="Let's prove you're human"] || //h1[text()="We can't create your account"]`, { timeout: MAX_TIMEOUT });
+    if (title == `We can't create your account`) {
+        logger.info("我们无法创建您的账户");
         process.exit(1);
     }
 
