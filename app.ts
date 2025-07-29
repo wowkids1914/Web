@@ -160,7 +160,7 @@ let firefox: Browser;
 
     logger.info("等待验证真人");
 
-    const title = await outlookPage.textContent(`//h1[text()="Let's prove you're human"] || //h1[text()="We can't create your account"]`, { timeout: MAX_TIMEOUT });
+    const title = await outlookPage.textContent(`//h1[text()="Let's prove you're human" or text()="We can't create your account"]`, { timeout: MAX_TIMEOUT });
     if (title == `We can't create your account`) {
         logger.info("我们无法创建您的账户");
         process.exit(1);
