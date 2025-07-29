@@ -12,9 +12,10 @@ import { authenticator } from 'otplib';
 
 declare const protonMail: string;
 declare const protonPage: Page;
-declare let firefox: Browser;
 
 const MAX_TIMEOUT = Math.pow(2, 31) - 1;
+
+let firefox: Browser;
 
 (async () => {
     const headless = os.platform() == 'linux';
