@@ -37,7 +37,8 @@ jobs:
           path: step-summary
 
       - name: 列出 images 文件夹内容
-        run: ls -l images/
+        run: |
+          [ -d images ] && ls -l images/
 
       - name: 上传 images 文件夹
         if: ${{ hashFiles('images/**') != '' }}
