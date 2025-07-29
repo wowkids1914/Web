@@ -12,7 +12,7 @@ import { authenticator } from 'otplib';
 
 declare const protonMail: string;
 declare const protonPage: Page;
-declare const firefox: Browser;
+declare let firefox: Browser;
 
 const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
@@ -52,7 +52,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
                 await pages[i].screenshot({ path: `./images/chrome-${timestamp}-${i + 1}.png` });
             }
 
-            if (typeof firefox != "undefined" && firefox) {
+            if (firefox) {
                 const pages = await firefox.pages();
                 for (let i = 0; i < pages.length; i++) {
                     await pages[i].screenshot({ path: `./images/firefox-${timestamp}-${i + 1}.png` });
@@ -296,7 +296,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     const userMail = typeof protonMail != "undefined" ? protonMail : outlookMail;
     const mailPage = typeof protonPage != "undefined" ? protonPage : outlookPage;
 
-    const firefox = await puppeteer.launch({
+    firefox = await puppeteer.launch({
         browser: "firefox",
         headless,
         defaultViewport: null,//自适应
