@@ -40,7 +40,7 @@ jobs:
 
       - name: 列出 images 文件夹内容
         run: |
-          [ -d images ] && ls -l images/
+          ls -l images/ || echo "images folder not found"
 
       - name: 上传 images 文件夹
         if: ${{ hashFiles('images/**') != '' }}
