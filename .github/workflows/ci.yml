@@ -23,7 +23,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: 运行
-        continue-on-error: true
         run: |
           yarn
           npx puppeteer browsers install firefox
@@ -33,13 +32,14 @@ jobs:
           truncate -s 0 $GITHUB_STEP_SUMMARY
 
       - name: 上传 step summary artifact
+        if: always() && hashFiles('step-summary') != ''
         uses: actions/upload-artifact@v4
         with:
           name: step-summary-${{ matrix.job_id }}
           path: step-summary
 
       - name: 上传 images 文件夹
-        if: ${{ hashFiles('images/**') != '' }}
+        if: hashFiles('images/**') != ''
         uses: actions/upload-artifact@v4
         with:
           name: images-${{ matrix.job_id }}
