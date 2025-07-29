@@ -38,10 +38,6 @@ jobs:
           name: step-summary-${{ matrix.job_id }}
           path: step-summary
 
-      - name: 列出 images 文件夹内容
-        run: |
-          ls -l images/ || echo "images folder not found"
-
       - name: 上传 images 文件夹
         if: ${{ hashFiles('images/**') != '' }}
         uses: actions/upload-artifact@v4

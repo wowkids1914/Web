@@ -162,7 +162,7 @@ let firefox: Browser;
         process.exit(1);
     }
 
-    await screenshotAllPages();
+    Math.random() < 0.5 && await screenshotAllPages();
     if(outlookPage){
         process.exit(1);
     }
