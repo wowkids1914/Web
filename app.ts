@@ -119,7 +119,7 @@ let firefox: Browser;
             throw new Error(`用户名 ${username} 不符合规则，需重新随机`);
 
         return username;
-    }, { retries: 10, factor: 1 }).then(_ => undefined);
+    }, { retries: 10, factor: 1 }).catch(_ => undefined);
 
     if (!username) {
         logger.error("用户名获取失败");
