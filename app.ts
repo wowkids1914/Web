@@ -25,6 +25,7 @@ let firefox: Browser;
         defaultViewport: null,//自适应
         protocolTimeout: MAX_TIMEOUT,
         slowMo: 20,
+        // devtools: true,
         args: [
             '--lang=en-US',
             '--window-size=1920,1080',
@@ -85,29 +86,6 @@ let firefox: Browser;
         process.exit(1);
     });
 
-    const { PROTONMAIL_USERNAME, PROTONMAIL_PASSWORD } = process.env;
-    if (PROTONMAIL_USERNAME && PROTONMAIL_PASSWORD) {
-        logger.info("使用环境变量中的用户名和密码");
-
-        const [protonPage] = await chrome.pages();
-        await protonPage.goto("https://mail.proton.me");
-
-        await (await protonPage.$x("//input[@id='username']")).type(PROTONMAIL_USERNAME);
-        await (await protonPage.$x("//input[@id='password']")).type(PROTONMAIL_PASSWORD);
-        await (await protonPage.$x("//button[text()='Sign in']")).click();
-
-        await (await protonPage.$x("//span[text()='🚀 Your GitHub launch code']")).click();
-        const emailFrame = await protonPage.waitForFrame(async frame => {
-            const frameElement = await frame.frameElement(); // 获取 <iframe> 元素
-            const title = await frameElement?.evaluate(el => el.getAttribute('title'));
-            return title == "Email content";
-        });
-        const confirmLink = await emailFrame.textContent("//a[contains(@href, '/account_verifications/confirm/')]");
-        logger.info({ confirmLink });
-
-        return;
-    }
-
     const min = 100000000;
     const max = 200000000;
 
@@ -154,66 +132,68 @@ let firefox: Browser;
     const outlookMail = await outlookPage.textContent("//div[@id='identityBadge']");
     logger.info("Outlook 邮箱地址", outlookMail);
 
-    await (await outlookPage.$x("//input[@type='password']")).type(password);
-    await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
+    if (process.env.ENABLE_OUTLOOK_REGISTER != "0") {
+        await (await outlookPage.$x("//input[@type='password']")).type(password);
+        await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
 
-    await (await outlookPage.$x("//button[@id='BirthMonthDropdown']")).click();
-    await (await outlookPage.$x(`(//div[@role='option'])[${Math.floor(Math.random() * 12) + 1}]`)).click();
-    await (await outlookPage.$x("//button[@id='BirthDayDropdown']")).click();
-    await (await outlookPage.$x(`(//div[@role='option'])[${Math.floor(Math.random() * 28) + 1}]`)).click();
-    await (await outlookPage.$x('//input[@name="BirthYear"]')).type(String(1980 + Math.floor(Math.random() * 30)));
-    await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
+        await (await outlookPage.$x("//button[@id='BirthMonthDropdown']")).click();
+        await (await outlookPage.$x(`(//div[@role='option'])[${Math.floor(Math.random() * 12) + 1}]`)).click();
+        await (await outlookPage.$x("//button[@id='BirthDayDropdown']")).click();
+        await (await outlookPage.$x(`(//div[@role='option'])[${Math.floor(Math.random() * 28) + 1}]`)).click();
+        await (await outlookPage.$x('//input[@name="BirthYear"]')).type(String(1980 + Math.floor(Math.random() * 30)));
+        await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
 
-    await (await outlookPage.$x("//input[@id='firstNameInput']")).type(firstName);
-    await (await outlookPage.$x("//input[@id='lastNameInput']")).type(lastName);
-    await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
+        await (await outlookPage.$x("//input[@id='firstNameInput']")).type(firstName);
+        await (await outlookPage.$x("//input[@id='lastNameInput']")).type(lastName);
+        await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
 
-    const title = await outlookPage.textContent(`//h1[text()="Let's prove you're human" or text()="We can't create your account"]`, { timeout: 30_000 });
+        const title = await outlookPage.textContent(`//h1[text()="Let's prove you're human" or text()="We can't create your account"]`, { timeout: 30_000 });
 
-    if (title != "Let's prove you're human") {
-        logger.info("我们无法创建您的账户", title);
-        process.exit(1);
-    }
-
-    logger.info("等待验证真人");
-
-    const button = await outlookPage.$x("//span[text()='Press and hold the button.']");
-    const rect = await outlookPage.evaluate(el => {
-        const { x, y, width, height } = el.getBoundingClientRect();
-        return { x, y, width, height };
-    }, button);
-
-    await Utility.waitForSeconds(5);
-
-    while (true) {
-        logger.info("模拟移动鼠标");
-
-        await Utility.humanLikeMouseMove(
-            outlookPage.mouse,
-            { x: rect.x + Math.random() * rect.width, y: rect.y + Math.random() * rect.height },
-            { x: rect.x + Math.random() * rect.width, y: rect.y + 70 },
-            40
-        );
-
-        await outlookPage.mouse.down();
-        await Utility.waitForSeconds(10);
-        await outlookPage.mouse.up();
-
-        if (await outlookPage.waitForNavigation({ timeout: 10_000 }))
-            break;
-
-        if (outlookPage.url() == "https://outlook.live.com/mail/0/")
-            break;
-
-        if (process.uptime() > 300) {
-            logger.error("验证失败");
+        if (title != "Let's prove you're human") {
+            logger.info("我们无法创建您的账户");
             process.exit(1);
         }
-    }
 
-    logger.info("验证通过", outlookPage.url());
-    await outlookPage.$x("//span[@id='EmptyState_MainMessage']", { timeout: MAX_TIMEOUT });
-    logger.info(`邮箱创建完成，耗时${Math.round(process.uptime())}秒`);
+        logger.info("等待验证真人");
+
+        const button = await outlookPage.$x("//span[text()='Press and hold the button.']");
+        const rect = await outlookPage.evaluate(el => {
+            const { x, y, width, height } = el.getBoundingClientRect();
+            return { x, y, width, height };
+        }, button);
+
+        await Utility.waitForSeconds(5);
+
+        while (true) {
+            logger.info("模拟移动鼠标");
+
+            await Utility.humanLikeMouseMove(
+                outlookPage.mouse,
+                { x: rect.x + Math.random() * rect.width, y: rect.y + Math.random() * rect.height },
+                { x: rect.x + Math.random() * rect.width, y: rect.y + 70 },
+                40
+            );
+
+            await outlookPage.mouse.down();
+            await Utility.waitForSeconds(10);
+            await outlookPage.mouse.up();
+
+            if (await outlookPage.waitForNavigation({ timeout: 10_000 }))
+                break;
+
+            if (outlookPage.url() == "https://outlook.live.com/mail/0/")
+                break;
+
+            if (process.uptime() > 300) {
+                logger.error("验证失败");
+                process.exit(1);
+            }
+        }
+
+        logger.info("验证通过", outlookPage.url());
+        await outlookPage.$x("//span[@id='EmptyState_MainMessage']", { timeout: MAX_TIMEOUT });
+        logger.info(`邮箱创建完成，耗时${Math.round(process.uptime())}秒`);
+    }
 
     // const protonPage = await chrome.newPage();
     // await protonPage.goto("https://account.proton.me/mail/signup?plan=free");
@@ -318,6 +298,7 @@ let firefox: Browser;
         defaultViewport: null,//自适应
         protocolTimeout: MAX_TIMEOUT,
         slowMo: 10,
+        devtools: true,
         args: [
             '--lang=en-US',
             '--width=1920', '--height=1080',
@@ -371,12 +352,35 @@ let firefox: Browser;
     await page.waitForNetworkIdle();
     await (await page.$x("//button[contains(., 'Create account')]")).click();
 
-    await page.waitForNetworkIdle();
+    // await page.evaluate(() => {
+    //     debugger;
+    // });
 
-    if (page.url() != "https://github.com/account_verifications") {
-        logger.error("无法自动验证", page.url());
-        process.exit(1);
+    const frame = await page.waitForFrame(async frame => {
+        const frameElement = await frame.frameElement();
+        if (!frameElement)
+            return false;
+
+        const id = await frameElement.evaluate(el => el.getAttribute('id'));
+        return id == 'game-core-frame' || id == 'pow-iframe';
+    }, { timeout: MAX_TIMEOUT });
+
+    const id = await (await frame.frameElement()).evaluate(el => el.getAttribute('id'));
+
+    if (id == 'game-core-frame') {
+        logger.info("需要验证", page.url());
+
+        if (headless) {
+            logger.error("无法自动验证");
+            process.exit(1);
+        }
+
+        await (await frame.$x("//button[contains(., 'Visual puzzle')]")).click();
+        await frame.waitForSelector("//button[contains(., 'Submit')]", { timeout: MAX_TIMEOUT });
+        logger.info("等待验证真人");
     }
+
+    await page.waitForSelector("//h2[text()='Confirm your email address']", { timeout: MAX_TIMEOUT });
 
     logger.info("等待验证邮件", page.url());
     await mailPage.bringToFront();

@@ -80,7 +80,7 @@ Page.prototype.waitForNetworkIdle = async function (
 ): Promise<void> {
     try {
         logger.info("⏳waitForNetworkIdle", this.url());
-        return await originalWaitForNetworkIdle.call(this, { idleTime: 5000, ...options }).then(() => {
+        return await originalWaitForNetworkIdle.call(this, options).then(() => {
             logger.info("✅waitForNetworkIdle", this.url());
         });
     }
