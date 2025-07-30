@@ -171,7 +171,7 @@ let firefox: Browser;
     const title = await outlookPage.textContent(`//h1[text()="Let's prove you're human" or text()="We can't create your account"]`, { timeout: 30_000 });
 
     if (title != "Let's prove you're human") {
-        logger.info("我们无法创建您的账户");
+        logger.info("我们无法创建您的账户", title);
         process.exit(1);
     }
 
