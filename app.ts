@@ -15,14 +15,12 @@ declare const protonPage: Page;
 
 const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
-let firefox: Browser;
-
 (async () => {
     const headless = os.platform() == 'linux';
 
     const chrome = await puppeteer.launch({
         headless,
-        defaultViewport: null,//自适应
+        defaultViewport: null,
         protocolTimeout: MAX_TIMEOUT,
         slowMo: 20,
         handleSIGINT: false,
@@ -56,14 +54,6 @@ let firefox: Browser;
             logger.info("chrome", pages.length);
             for (let i = 0; i < pages.length; i++) {
                 await pages[i].screenshot({ path: `./images/chrome-${timestamp}-${i + 1}.png` });
-            }
-
-            if (firefox) {
-                const pages = await firefox.pages();
-                logger.info("firefox", pages.length);
-                for (let i = 0; i < pages.length; i++) {
-                    await pages[i].screenshot({ path: `./images/firefox-${timestamp}-${i + 1}.png` });
-                }
             }
         }
         catch (e) {
@@ -295,28 +285,24 @@ let firefox: Browser;
     const userMail = typeof protonMail != "undefined" ? protonMail : outlookMail;
     const mailPage = typeof protonPage != "undefined" ? protonPage : outlookPage;
 
-    // firefox = await puppeteer.launch({
-    //     browser: "firefox",
-    //     headless,
-    //     defaultViewport: null,//自适应
-    //     protocolTimeout: MAX_TIMEOUT,
-    //     slowMo: 10,
-    //     handleSIGINT: false,
-    //     handleSIGTERM: false,
-    //     handleSIGHUP: false,
-    //     devtools: true,
-    //     args: [
-    //         '--lang=en-US',
-    //         '--width=1920', '--height=1080',
-    //         // headless 模式下，Puppeteer 的默认 User-Agent 会包含 "HeadlessChrome" 字样，容易被识别为机器人。
-    //         '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0'
-    //     ]
-    // });
+    const firefox = os.platform() != 'linux' && await puppeteer.launch({
+        browser: "firefox",
+        headless,
+        defaultViewport: null,
+        protocolTimeout: MAX_TIMEOUT,
+        slowMo: 10,
+        devtools: true,
+        args: [
+            '--lang=en-US',
+            '--width=1920', '--height=1080',
+            // headless 模式下，Puppeteer 的默认 User-Agent 会包含 "HeadlessChrome" 字样，容易被识别为机器人。
+            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0'
+        ]
+    });
 
-    // logger.info(firefox.process().spawnfile, await firefox.version(), firefox.wsEndpoint());
+    firefox && logger.info(firefox.process().spawnfile, await firefox.version(), firefox.wsEndpoint());
 
-    // const [page] = await firefox.pages();
-    const page = await chrome.newPage();
+    const page = (await firefox?.pages?.())?.[0] || await chrome.newPage();
 
     const viewportSize = await mailPage.evaluate(() => ({
         width: window.innerWidth,
@@ -457,10 +443,7 @@ let firefox: Browser;
     if (headless) {
         const data = JSON.stringify([account, password, otpSecret, new Date().toString()]);
         Utility.appendStepSummary(data);
-
-        await chrome.close();
-        await firefox.close();
-        return;
+        process.exit();
     }
 
     await (await page.$x("//a[@href='/settings/apps']")).click();// Developer settings
