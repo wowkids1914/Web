@@ -58,7 +58,7 @@ jobs:
 
   collect-summary:
     runs-on: ubuntu-latest
-    needs: job
+    needs: concurrent-jobs
     steps:
       - name: 下载所有 job 的 step summary
         uses: actions/download-artifact@v4
