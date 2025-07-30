@@ -168,13 +168,18 @@ let firefox: Browser;
     await (await outlookPage.$x("//input[@id='lastNameInput']")).type(lastName);
     await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
 
-    logger.info("等待验证真人");
+    const title = await outlookPage.textContent(`//h1[text()="Let's prove you're human" or text()="We can't create your account"]`, { timeout: 60_000 });
+    if (!title) {
+        await screenshotAllPages();
+        process.exit(1);
+    }
 
-    const title = await outlookPage.textContent(`//h1[text()="Let's prove you're human" or text()="We can't create your account"]`, { timeout: MAX_TIMEOUT });
     if (title == `We can't create your account`) {
         logger.info("我们无法创建您的账户");
         process.exit(1);
     }
+
+    logger.info("等待验证真人");
 
     const button = await outlookPage.$x("//span[text()='Press and hold the button.']");
     const rect = await outlookPage.evaluate(el => {
