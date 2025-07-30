@@ -168,13 +168,9 @@ let firefox: Browser;
     await (await outlookPage.$x("//input[@id='lastNameInput']")).type(lastName);
     await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
 
-    const title = await outlookPage.textContent(`//h1[text()="Let's prove you're human" or text()="We can't create your account"]`, { timeout: 60_000 });
-    if (!title) {
-        await screenshotAllPages();
-        process.exit(1);
-    }
+    const title = await outlookPage.textContent(`//h1[text()="Let's prove you're human" or text()="We can't create your account"]`, { timeout: 30_000 });
 
-    if (title == `We can't create your account`) {
+    if (title != "Let's prove you're human") {
         logger.info("我们无法创建您的账户");
         process.exit(1);
     }
@@ -392,26 +388,22 @@ let firefox: Browser;
     await page.waitForNetworkIdle();
     await (await page.$x("//button[contains(., 'Create account')]")).click();
 
-    if (!await page.waitForNavigation()) {
-        await screenshotAllPages();
-        process.exit(1);
-    }
+    await page.waitForNetworkIdle();
 
     if (page.url() != "https://github.com/account_verifications") {
-        logger.error("无法自动验证");
+        logger.error("无法自动验证", page.url());
         process.exit(1);
     }
 
     logger.info("等待验证邮件", page.url());
     await mailPage.bringToFront();
-    const launchCode = await mailPage.$x("//span[text()='🚀 Your GitHub launch code']", { timeout: 30_000 });
-    if (!launchCode) {
-        await screenshotAllPages();
-        process.exit(1);
-    }
-
-    await launchCode.click();
+    await mailPage.click("//span[text()='🚀 Your GitHub launch code']", { timeout: MAX_TIMEOUT });
     logger.info("收到验证邮件");
+
+    if (await mailPage.$("//button[@id='unified-consent-continue-button']")) {
+        logger.info("出现OK按钮");
+        await mailPage.click("//button[@id='unified-consent-continue-button']");
+    }
 
     const emailFrame = mailPage.url().includes("outlook") ? mailPage.mainFrame() : await mailPage.waitForFrame(async frame => {
         const frameElement = await frame.frameElement(); // 获取 <iframe> 元素

@@ -80,7 +80,7 @@ Page.prototype.waitForNetworkIdle = async function (
 ): Promise<void> {
     try {
         logger.info("⏳waitForNetworkIdle", this.url());
-        return await originalWaitForNetworkIdle.call(this, { timeout: 10_000, ...options }).then(() => {
+        return await originalWaitForNetworkIdle.call(this, options).then(() => {
             logger.info("✅waitForNetworkIdle", this.url());
         });
     }
@@ -127,7 +127,7 @@ Frame.prototype.waitForSelector = async function <Selector extends string>(
     const isMainFrame = page.mainFrame() == this;
 
     if (timeout >= 30_000)
-        logger.info("waitForSelector", selector, (options && JSON.stringify(options)) ?? "");
+        logger.info("⏳waitForSelector", selector, (options && JSON.stringify(options)) ?? "");
 
     do {
         try {
@@ -144,10 +144,7 @@ Frame.prototype.waitForSelector = async function <Selector extends string>(
             }
         }
         catch (e) {
-            logger.info("waitForSelector", selector, (options && JSON.stringify(options)) ?? "", e.message);
-
-            if (e.message?.includes('Execution context was destroyed'))
-                continue;
+            logger.warn("⚠️waitForSelector", selector, (options && JSON.stringify(options)) ?? "", e.message);
         }
 
         if (Date.now() >= endTime)
@@ -157,7 +154,7 @@ Frame.prototype.waitForSelector = async function <Selector extends string>(
     } while (true);
 
     if (config.timeout)
-        logger.error(`Waiting for selector \`${selector}\` failed: ${config.timeout}ms exceeded`);
+        logger.error(`❌Waiting for selector \`${selector}\` failed: ${config.timeout}ms exceeded`);
 };
 
 const originalWaitForFrame = Page.prototype.waitForFrame;
