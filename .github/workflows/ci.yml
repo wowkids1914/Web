@@ -27,6 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     strategy:
+      max-parallel: 20
       fail-fast: false
       matrix:
         job_id: ${{ fromJson(needs.prepare-matrix.outputs.ids) }}
