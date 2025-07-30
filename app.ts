@@ -25,6 +25,9 @@ let firefox: Browser;
         defaultViewport: null,//自适应
         protocolTimeout: MAX_TIMEOUT,
         slowMo: 20,
+        handleSIGINT: false,
+        handleSIGTERM: false,
+        handleSIGHUP: false,
         // devtools: true,
         args: [
             '--lang=en-US',
@@ -150,7 +153,7 @@ let firefox: Browser;
         const title = await outlookPage.textContent(`//h1[text()="Let's prove you're human" or text()="We can't create your account"]`, { timeout: 30_000 });
 
         if (title != "Let's prove you're human") {
-            logger.info("我们无法创建您的账户");
+            logger.info("我们无法创建您的账户", title);
             process.exit(1);
         }
 
@@ -184,7 +187,7 @@ let firefox: Browser;
             if (outlookPage.url() == "https://outlook.live.com/mail/0/")
                 break;
 
-            if (process.uptime() > 300) {
+            if (process.uptime() > 180) {
                 logger.error("验证失败");
                 process.exit(1);
             }
@@ -298,6 +301,9 @@ let firefox: Browser;
         defaultViewport: null,//自适应
         protocolTimeout: MAX_TIMEOUT,
         slowMo: 10,
+        handleSIGINT: false,
+        handleSIGTERM: false,
+        handleSIGHUP: false,
         devtools: true,
         args: [
             '--lang=en-US',
