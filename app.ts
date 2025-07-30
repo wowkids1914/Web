@@ -320,32 +320,15 @@ let firefox: Browser;
         slowMo: 10,
         args: [
             '--lang=en-US',
-            '--window-size=1920,1080',
-            '--disable-blink-features=AutomationControlled',
+            '--width=1920', '--height=1080',
             // headless 模式下，Puppeteer 的默认 User-Agent 会包含 "HeadlessChrome" 字样，容易被识别为机器人。
-            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0',
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-accelerated-2d-canvas',
-            '--no-zygote',
-            '--disable-gpu',
-            '--disable-extensions-file-access-check',
-            '--disable-extensions-http-throttling'
+            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0'
         ]
     });
 
     logger.info(firefox.process().spawnfile, await firefox.version(), firefox.wsEndpoint());
 
     const [page] = await firefox.pages();
-
-    const viewportSize = await mailPage.evaluate(() => ({
-        width: window.innerWidth,
-        height: window.innerHeight
-    }));
-
-    await page.setViewport(viewportSize);
-
     await page.goto("https://github.com/signup");
     await (await page.$x("//input[@placeholder='Email']")).type(userMail);
     await (await page.$x("//input[@placeholder='Password']")).type(password);
