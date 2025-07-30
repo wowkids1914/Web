@@ -59,8 +59,9 @@ Page.prototype.waitForNavigation = async function (
     options?: WaitForOptions
 ): Promise<HTTPResponse | null> {
     logger.info("⏳waitForNavigation", this.url());
-    const response = await originalWaitForNavigation.call(this, options).then(() => {
+    const response = await originalWaitForNavigation.call(this, options).then(response => {
         logger.info("✅waitForNavigation", this.url());
+        return response;
     }).catch(e => {
         logger.error(`❌waitForNavigation ${this.url()} ${(options && JSON.stringify(options)) ?? ""} ${e.message}`);
         return null;
