@@ -58,22 +58,18 @@ Page.prototype.waitForNavigation = async function (
     this: Page,
     options?: WaitForOptions
 ): Promise<HTTPResponse | null> {
-    let count = 3;
-    while (count-- > 0) {
-        logger.info("⏳waitForNavigation", this.url());
-        const response = await originalWaitForNavigation.call(this, options).then(() => {
-            logger.info("✅waitForNavigation", this.url());
-        }).catch(e => {
-            logger.error(`❌waitForNavigation ${this.url()} ${(options && JSON.stringify(options)) ?? ""} ${e.message}`);
-            return null;
-        });
+    logger.info("⏳waitForNavigation", this.url());
+    const response = await originalWaitForNavigation.call(this, options).then(() => {
+        logger.info("✅waitForNavigation", this.url());
+    }).catch(e => {
+        logger.error(`❌waitForNavigation ${this.url()} ${(options && JSON.stringify(options)) ?? ""} ${e.message}`);
+        return null;
+    });
 
-        if (!response || response.ok())
-            return response;
-
+    if (response && !response.ok())
         logger.error(`waitForNavigation ${this.url()} ${response.status()} ${STATUS_CODES[response.status()]}`);
-        await this.reload();
-    }
+
+    return response;
 };
 
 const originalWaitForNetworkIdle = Page.prototype.waitForNetworkIdle;
@@ -164,12 +160,12 @@ Frame.prototype.waitForSelector = async function <Selector extends string>(
 };
 
 const originalWaitForFrame = Page.prototype.waitForFrame;
-Page.prototype.waitForFrame = function (
+Page.prototype.waitForFrame = async function (
     this: Page,
     urlOrPredicate: string | ((frame: Frame) => Awaitable<boolean>),
     options?: WaitTimeoutOptions
 ): Promise<Frame> {
-    return originalWaitForFrame.call(this, urlOrPredicate, options).catch(() => undefined);
+    return originalWaitForFrame.call(this, urlOrPredicate, options).catch(e => console.error(e.message));
 };
 
 const $ = Frame.prototype.$;

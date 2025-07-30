@@ -67,6 +67,11 @@ let firefox: Browser;
         }
     }
 
+    process.on('exit', (code) => {
+        // 不能执行异步代码
+        logger.info(`进程退出，代码: ${code}，耗时：${Math.round(process.uptime())}秒`);
+    });
+
     process.on('SIGTERM', async () => {
         // timeout docker-compose down/stop 会触发 SIGTERM 信号
         logger.info('SIGTERM: 终止请求');
@@ -382,44 +387,26 @@ let firefox: Browser;
     await page.waitForNetworkIdle();
     await (await page.$x("//button[contains(., 'Create account')]")).click();
 
-    const frame = await page.waitForFrame(async frame => {
-        const frameElement = await frame.frameElement();
-        if (!frameElement)
-            return false;
-
-        const id = await frameElement.evaluate(el => el.getAttribute('id'));
-        return id == 'game-core-frame';
-    }, { timeout: 15_000 });
-
-    if (frame) {
-        logger.info("需要验证");
-
-        if (headless) {
-            logger.error("无法自动验证");
-            process.exit(1);
-        }
-
-        await (await frame.$x("//button[contains(., 'Visual puzzle')]")).click();
-        await frame.$x("//button[contains(., 'Submit')]");
-        logger.info("等待验证真人");
-        await page.$x("//h2[text()='Confirm your email address']", { timeout: MAX_TIMEOUT });
-    }
-    else {
-        if (!await page.$x("//h2[text()='Confirm your email address']", { timeout: 30_000 })) {
-            await screenshotAllPages();
-            process.exit(1);
-        }
+    if (!await page.waitForNavigation()) {
+        await screenshotAllPages();
+        process.exit(1);
     }
 
-    logger.info("等待验证邮件");
+    if (page.url() != "https://github.com/account_verifications") {
+        logger.error("无法自动验证");
+        process.exit(1);
+    }
+
+    logger.info("等待验证邮件", page.url());
     await mailPage.bringToFront();
-    await (await mailPage.$x("//span[text()='🚀 Your GitHub launch code']")).click();
-    logger.info("收到验证邮件");
-
-    if (await mailPage.$("//button[.//span[text()='OK']]")) {
-        logger.info("出现OK按钮");
-        await mailPage.click("//button[.//span[text()='OK']]");
+    const launchCode = await mailPage.$x("//span[text()='🚀 Your GitHub launch code']", { timeout: 30_000 });
+    if (!launchCode) {
+        await screenshotAllPages();
+        process.exit(1);
     }
+
+    await launchCode.click();
+    logger.info("收到验证邮件");
 
     const emailFrame = mailPage.url().includes("outlook") ? mailPage.mainFrame() : await mailPage.waitForFrame(async frame => {
         const frameElement = await frame.frameElement(); // 获取 <iframe> 元素
