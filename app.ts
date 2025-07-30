@@ -310,6 +310,14 @@ let firefox: Browser;
     logger.info(firefox.process().spawnfile, await firefox.version(), firefox.wsEndpoint());
 
     const [page] = await firefox.pages();
+
+    const viewportSize = await mailPage.evaluate(() => ({
+        width: window.innerWidth,
+        height: window.innerHeight
+    }));
+
+    await page.setViewport(viewportSize);
+
     await page.goto("https://github.com/signup");
     await (await page.$x("//input[@placeholder='Email']")).type(userMail);
     await (await page.$x("//input[@placeholder='Password']")).type(password);
