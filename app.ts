@@ -376,7 +376,7 @@ let firefox: Browser;
             return false;
 
         const id = await frameElement.evaluate(el => el.getAttribute('id'));
-        return id == 'game-core-frame' || id == 'pow-iframe';
+        return id != null;
     }, { timeout: MAX_TIMEOUT });
 
     const id = await (await frame.frameElement()).evaluate(el => el.getAttribute('id'));
@@ -385,6 +385,7 @@ let firefox: Browser;
         logger.info("需要验证", page.url());
 
         if (headless) {
+            await screenshotAllPages();
             logger.error("无法自动验证");
             process.exit(1);
         }
