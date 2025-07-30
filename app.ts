@@ -300,16 +300,18 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         ]
     });
 
-    firefox && logger.info(firefox.process().spawnfile, await firefox.version(), firefox.wsEndpoint());
-
     const page = (await firefox?.pages?.())?.[0] || await chrome.newPage();
 
-    const viewportSize = await mailPage.evaluate(() => ({
-        width: window.innerWidth,
-        height: window.innerHeight
-    }));
+    if (firefox) {
+        logger.info(firefox.process().spawnfile, await firefox.version(), firefox.wsEndpoint());
 
-    await page.setViewport(viewportSize);
+        const viewportSize = await mailPage.evaluate(() => ({
+            width: window.innerWidth,
+            height: window.innerHeight
+        }));
+
+        await page.setViewport(viewportSize);
+    }
 
     await page.goto("https://github.com/signup");
     await (await page.$x("//input[@placeholder='Email']")).type(userMail);
