@@ -19,8 +19,14 @@ Date.prototype.toString = function () {
 };
 
 const originalScreenshot = Page.prototype.screenshot;
-Page.prototype.screenshot = function (this: Page, options?: Readonly<ScreenshotOptions>): Promise<Uint8Array> {
+Page.prototype.screenshot = async function (this: Page, options?: Readonly<ScreenshotOptions>): Promise<Uint8Array> {
     logger.info("screenshot", this.url(), options?.path || "");
+
+    for (const frame of this.frames()) {
+        const element = await frame.frameElement();
+        const nameOrId = await element?.evaluate(frame => frame.name ?? frame.id);
+        logger.info({ nameOrId, title: await frame.title(), url: frame.url() });
+    }
 
     if (options?.path) {
         const dir = path.dirname(options.path);
@@ -157,13 +163,37 @@ Frame.prototype.waitForSelector = async function <Selector extends string>(
         logger.error(`❌Waiting for selector \`${selector}\` failed: ${config.timeout}ms exceeded`);
 };
 
-const originalWaitForFrame = Page.prototype.waitForFrame;
 Page.prototype.waitForFrame = async function (
     this: Page,
     urlOrPredicate: string | ((frame: Frame) => Awaitable<boolean>),
     options?: WaitTimeoutOptions
 ): Promise<Frame> {
-    return originalWaitForFrame.call(this, urlOrPredicate, options).catch(e => console.error(e.message));
+    const timeout = options.timeout ?? 30_000;
+    const endTime = Date.now() + timeout;
+
+    logger.info("⏳waitForFrame", (options && JSON.stringify(options)) ?? "");
+
+    do {
+        for (const frame of this.frames()) {
+            if (frame.url() == urlOrPredicate)
+                return frame;
+
+            try {
+                if (typeof urlOrPredicate == 'function' && await urlOrPredicate(frame))
+                    return frame;
+            }
+            catch (e) {
+                logger.warn("⚠️waitForFrame", (options && JSON.stringify(options)) ?? "", e.message);
+            }
+        }
+
+        if (Date.now() >= endTime)
+            break;
+
+        await Utility.waitForSeconds(0.2);
+    } while (true);
+
+    logger.error(`❌waitForFrame TimeoutError: Timed out after waiting ${options.timeout}ms`);
 };
 
 const $ = Frame.prototype.$;

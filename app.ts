@@ -355,17 +355,16 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     // });
 
     const frame = await page.waitForFrame(async frame => {
-        const frameElement = await frame.frameElement();
-        if (!frameElement)
-            return false;
+        if (frame.url() == "https://github.com/account_verifications")
+            return true;
 
-        const id = await frameElement.evaluate(el => el.getAttribute('id'));
-        return id != null;
+        if (await frame.$("//button[contains(., 'Visual puzzle')]"))
+            return true;
+
+        return false;
     }, { timeout: MAX_TIMEOUT });
 
-    const id = await (await frame.frameElement()).evaluate(el => el.getAttribute('id'));
-
-    if (id == 'game-core-frame') {
+    if (frame.url() != "https://github.com/account_verifications") {
         logger.info("需要验证", page.url());
 
         if (headless) {
@@ -373,14 +372,11 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             process.exit(1);
         }
 
-        await (await frame.$x("//button[contains(., 'Visual puzzle')]")).click();
+        await frame.click("//button[contains(., 'Visual puzzle')]");
         await frame.waitForSelector("//button[contains(., 'Submit')]", { timeout: MAX_TIMEOUT });
         logger.info("等待验证真人");
+        await page.waitForSelector("//h2[text()='Confirm your email address']", { timeout: MAX_TIMEOUT });
     }
-
-    logger.info({ id, url: frame.url(), title: frame.title() });
-
-    await page.waitForSelector("//h2[text()='Confirm your email address']", { timeout: MAX_TIMEOUT });
 
     logger.info("等待验证邮件", page.url());
     await mailPage.bringToFront();
