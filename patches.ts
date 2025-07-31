@@ -49,10 +49,10 @@ Page.prototype.goto = async function (
             if (response.ok())
                 return response;
 
-            logger.error(`goto ${url} ${response.status()} ${STATUS_CODES[response.status()]}`);
+            logger.error("goto", url, response.status(), STATUS_CODES[response.status()]);
         }
         catch (e) {
-            logger.error(`goto ${url} ${e.message}`);
+            logger.error("goto", url, e.message);
         }
 
         await Utility.waitForSeconds(1);
@@ -65,18 +65,20 @@ Page.prototype.waitForNavigation = async function (
     options?: WaitForOptions
 ): Promise<HTTPResponse | null> {
     logger.info("⏳waitForNavigation", this.url());
-    const response = await originalWaitForNavigation.call(this, options).then(response => {
-        logger.info("✅waitForNavigation", this.url());
+
+    try {
+        const response = await originalWaitForNavigation.call(this, options);
+
+        if (response.ok())
+            logger.info("✅waitForNavigation", this.url());
+        else
+            logger.error("❌waitForNavigation", this.url(), response.status(), STATUS_CODES[response.status()]);
+
         return response;
-    }).catch(e => {
-        logger.error(`❌waitForNavigation ${this.url()} ${(options && JSON.stringify(options)) ?? ""} ${e.message}`);
-        return null;
-    });
-
-    if (response && !response.ok())
-        logger.error(`waitForNavigation ${this.url()} ${response.status()} ${STATUS_CODES[response.status()]}`);
-
-    return response;
+    }
+    catch (e) {
+        logger.error("❌waitForNavigation", this.url(), (options && JSON.stringify(options)) ?? "", e.message);
+    }
 };
 
 const originalWaitForNetworkIdle = Page.prototype.waitForNetworkIdle;
@@ -84,14 +86,14 @@ Page.prototype.waitForNetworkIdle = async function (
     this: Page,
     options?: WaitForNetworkIdleOptions
 ): Promise<void> {
+    logger.info("⏳waitForNetworkIdle", this.url());
+
     try {
-        logger.info("⏳waitForNetworkIdle", this.url());
-        return await originalWaitForNetworkIdle.call(this, options).then(() => {
-            logger.info("✅waitForNetworkIdle", this.url());
-        });
+        await originalWaitForNetworkIdle.call(this, options);
+        logger.info("✅waitForNetworkIdle", this.url());
     }
     catch (e) {
-        logger.error(`❌waitForNetworkIdle ${this.url()} ${(options && JSON.stringify(options)) ?? ""} ${e.message}`);
+        logger.error("❌waitForNetworkIdle", this.url(), (options && JSON.stringify(options)) ?? "", e.message);
     }
 };
 
@@ -113,6 +115,18 @@ Frame.prototype.type = async function (
 ): Promise<void> {
     await (await this.waitForSelector(selector)).click({ count: 3 });
     return originalType.call(this, selector.startsWith("xpath=") ? selector : `xpath=${selector}`, text, options);
+};
+
+const title = Frame.prototype.title;
+Frame.prototype.title = async function (
+    this: Frame
+): Promise<string> {
+    try {
+        return await title.call(this);
+    }
+    catch (e) {
+        logger.error("title", e.message);
+    }
 };
 
 Frame.prototype.waitForSelector = async function <Selector extends string>(
@@ -192,7 +206,7 @@ Page.prototype.waitForFrame = async function (
         await Utility.waitForSeconds(0.2);
     } while (true);
 
-    logger.error(`❌waitForFrame TimeoutError: Timed out after waiting ${options.timeout}ms`);
+    logger.error(`❌waitForFrame TimeoutError: Timed out after waiting ${timeout}ms`);
 };
 
 Frame.prototype.$ = function <Selector extends string>(
