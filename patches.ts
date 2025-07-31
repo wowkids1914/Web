@@ -23,9 +23,7 @@ Page.prototype.screenshot = async function (this: Page, options?: Readonly<Scree
     logger.info("screenshot", this.url(), options?.path || "");
 
     for (const frame of this.frames()) {
-        const element = await frame.frameElement();
-        const nameOrId = await element?.evaluate(frame => frame.name ?? frame.id);
-        logger.info({ nameOrId, title: await frame.title(), url: frame.url() });
+        logger.info({ title: await frame.title(), url: frame.url() });
     }
 
     if (options?.path) {
