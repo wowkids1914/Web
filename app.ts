@@ -47,17 +47,12 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     logger.info(chrome.process().spawnfile, await chrome.version(), chrome.wsEndpoint());
 
     async function screenshotAllPages() {
-        try {
-            const timestamp = new Date().toString().replace(/[:.]/g, '-');
+        const timestamp = new Date().toString().replace(/[:.]/g, '-');
 
-            const pages = await chrome.pages();
-            logger.info("chrome", pages.length);
-            for (let i = 0; i < pages.length; i++) {
-                await pages[i].screenshot({ path: `./images/chrome-${timestamp}-${i + 1}.png` });
-            }
-        }
-        catch (e) {
-            logger.error("screenshotAllPages", e);
+        const pages = await chrome.pages();
+        logger.info("screenshotAllPages", pages.length);
+        for (let i = 0; i < pages.length; i++) {
+            await pages[i].screenshot({ path: `./images/chrome-${timestamp}-${i + 1}.png` }).catch(logger.error);
         }
     }
 

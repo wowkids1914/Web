@@ -10,8 +10,6 @@ import { STATUS_CODES } from 'http';
 import logger from './logger.js';
 import Utility from './Utility.js';
 
-os.platform() != 'linux' && (process.exit = (code?: number | string) => undefined as never);
-
 Date.prototype[util.inspect.custom] = function () {
     return moment(this).format('YYYY-MM-DD HH:mm:ss.SSS');
 };
@@ -22,6 +20,8 @@ Date.prototype.toString = function () {
 
 const originalScreenshot = Page.prototype.screenshot;
 Page.prototype.screenshot = function (this: Page, options?: Readonly<ScreenshotOptions>): Promise<Uint8Array> {
+    logger.info("screenshot", this.url(), options?.path || "");
+
     if (options?.path) {
         const dir = path.dirname(options.path);
         fs.mkdirSync(dir, { recursive: true });
