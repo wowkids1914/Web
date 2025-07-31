@@ -194,14 +194,11 @@ Page.prototype.waitForFrame = async function (
     logger.error(`❌waitForFrame TimeoutError: Timed out after waiting ${options.timeout}ms`);
 };
 
-const $ = Frame.prototype.$;
 Frame.prototype.$ = function <Selector extends string>(
     this: Frame,
-    selector: Selector,
-    options?: WaitForSelectorOptions
+    selector: Selector
 ): Promise<ElementHandle<NodeFor<Selector>> | null> {
-    selector = selector.startsWith("xpath=") ? selector : `xpath=${selector}` as Selector;
-    return $.call(this, selector, options);
+    return this.$x(selector, { timeout: 0 });
 };
 
 const $$ = Frame.prototype.$$;
