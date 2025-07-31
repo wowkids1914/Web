@@ -109,7 +109,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     await outlookPage.goto("https://outlook.live.com/mail/0/?prompt=create_account");
 
     const consentCheckInterval = setInterval(async () => {
-        const consentButton = await mailPage.$("//button[@id='unified-consent-continue-button']");
+        const consentButton = await outlookPage.$("//button[@id='unified-consent-continue-button']");
         if (consentButton) {
             logger.info("出现OK按钮");
             await consentButton.click();
