@@ -38,7 +38,7 @@ jobs:
         run: |
           yarn
           npx puppeteer browsers install firefox
-          yarn build && timeout 300s yarn dev
+          yarn build && timeout -k 30s 300s yarn dev
 
           cp $GITHUB_STEP_SUMMARY step-summary
           truncate -s 0 $GITHUB_STEP_SUMMARY

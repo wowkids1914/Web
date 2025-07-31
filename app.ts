@@ -65,7 +65,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         // timeout docker-compose down/stop 会触发 SIGTERM 信号
         logger.info('SIGTERM: 终止请求');
         await screenshotAllPages();
-        process.exit();
+        process.exit(1);
     });
 
     process.on("unhandledRejection", async (e: Error) => {
@@ -377,6 +377,8 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         await frame.waitForSelector("//button[contains(., 'Submit')]", { timeout: MAX_TIMEOUT });
         logger.info("等待验证真人");
     }
+
+    logger.info({ id, url: frame.url(), title: frame.title() });
 
     await page.waitForSelector("//h2[text()='Confirm your email address']", { timeout: MAX_TIMEOUT });
 
