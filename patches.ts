@@ -10,6 +10,8 @@ import { STATUS_CODES } from 'http';
 import logger from './logger.js';
 import Utility from './Utility.js';
 
+const $ = Frame.prototype.$;
+
 Date.prototype[util.inspect.custom] = function () {
     return moment(this).format('YYYY-MM-DD HH:mm:ss.SSS');
 };
@@ -109,9 +111,8 @@ Frame.prototype.type = async function (
     text: string,
     options?: Readonly<KeyboardTypeOptions>
 ): Promise<void> {
-    selector = selector.startsWith("xpath=") ? selector : `xpath=${selector}`;
     await (await this.waitForSelector(selector)).click({ count: 3 });
-    return originalType.call(this, selector, text, options);
+    return originalType.call(this, selector.startsWith("xpath=") ? selector : `xpath=${selector}`, text, options);
 };
 
 Frame.prototype.waitForSelector = async function <Selector extends string>(
@@ -135,7 +136,7 @@ Frame.prototype.waitForSelector = async function <Selector extends string>(
 
     do {
         try {
-            const elementHandle = await (isMainFrame ? page.mainFrame() : this).$(selector);
+            const elementHandle = await $.call(isMainFrame ? page.mainFrame() : this, selector.startsWith("xpath=") ? selector : `xpath=${selector}`);
             if (elementHandle) {
                 if (config.visible && await elementHandle.isVisible())
                     return elementHandle;
@@ -207,12 +208,10 @@ Frame.prototype.$$ = async function <Selector extends string>(
     selector: Selector,
     options?: QueryOptions
 ): Promise<Array<ElementHandle<NodeFor<Selector>>>> {
-    selector = selector.startsWith("xpath=") ? selector : `xpath=${selector}` as Selector;
-
     if (options?.timeout)
         await this.waitForSelector(selector, options);
 
-    return $$.call(this, selector, options);
+    return $$.call(this, selector.startsWith("xpath=") ? selector : `xpath=${selector}`, options);
 };
 
 Frame.prototype.$x = function <Selector extends string>(
