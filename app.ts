@@ -108,6 +108,15 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     const [outlookPage] = await chrome.pages();
     await outlookPage.goto("https://outlook.live.com/mail/0/?prompt=create_account");
 
+    const consentCheckInterval = setInterval(async () => {
+        const consentButton = await mailPage.$("//button[@id='unified-consent-continue-button']");
+        if (consentButton) {
+            logger.info("出现OK按钮");
+            await consentButton.click();
+            clearInterval(consentCheckInterval);
+        }
+    }, 1_000);
+
     await (await outlookPage.$x("//input[@aria-label='New email']", { timeout: MAX_TIMEOUT })).type(username.replace(/^(\d)/, 'u$1'));
     await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
 
@@ -382,11 +391,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     await mailPage.bringToFront();
     await mailPage.click("//span[text()='🚀 Your GitHub launch code']", { timeout: MAX_TIMEOUT });
     logger.info("收到验证邮件");
-
-    if (await mailPage.$("//button[@id='unified-consent-continue-button']")) {
-        logger.info("出现OK按钮");
-        await mailPage.click("//button[@id='unified-consent-continue-button']");
-    }
 
     const emailFrame = mailPage.url().includes("outlook") ? mailPage.mainFrame() : await mailPage.waitForFrame(async frame => {
         const frameElement = await frame.frameElement(); // 获取 <iframe> 元素
