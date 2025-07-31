@@ -31,10 +31,10 @@ function getCallerLocation(): string {
 }
 
 const logger = {
-    info: (...args: any[]) => baseLogger.info(util.format(...args), { location: getCallerLocation() }),
-    warn: (...args: any[]) => baseLogger.warn(util.format(...args), { location: getCallerLocation() }),
-    error: (...args: any[]) => baseLogger.error(util.format(...args), { location: getCallerLocation() }),
-    debug: (...args: any[]) => baseLogger.debug(util.format(...args), { location: getCallerLocation() }),
+    info: (...args: any[]) => { baseLogger.info(util.format(...args), { location: getCallerLocation() }) },
+    warn: (...args: any[]) => { baseLogger.warn(util.format(...args), { location: getCallerLocation() }) },
+    error: (...args: any[]) => { baseLogger.error(util.format(...args), { location: getCallerLocation() }) },
+    debug: (...args: any[]) => { baseLogger.debug(util.format(...args), { location: getCallerLocation() }) },
 };
 
 export default logger;
