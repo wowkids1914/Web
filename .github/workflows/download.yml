@@ -50,6 +50,7 @@ jobs:
           # 转换为 MB/s，保留两位小数
           speed_mb=$(awk "BEGIN {printf \"%.2f\", $speed/1024/1024}")
           echo "$speed_mb" > speed.txt
+          timeout 120s node index.js --count 20 --path /download --value $speed_mb
 
       - name: 上传下载速度结果
         uses: actions/upload-artifact@v4
