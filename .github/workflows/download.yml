@@ -3,12 +3,6 @@ on:
     paths:
       - '.github/workflows/download.yml'
   workflow_dispatch:
-    inputs:
-      count:
-        description: '任务数'
-        required: true
-        default: 10
-        type: number
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -16,6 +10,7 @@ concurrency:
 
 env:
   TZ: Asia/Shanghai
+  TASK_COUNT: 10
 
 jobs:
   prepare-matrix:
@@ -26,10 +21,7 @@ jobs:
       - uses: actions/checkout@v4
       - id: set-matrix
         run: |
-          count=${{inputs.count}}
-          if [ -z "$count" ]; then
-            count=5
-          fi
+          count=${{env.TASK_COUNT}}
           ids=$(jq -c -n --argjson n "$count" '[range(1; $n+1)]')
           echo "ids=$ids" >> $GITHUB_OUTPUT
 
@@ -51,7 +43,7 @@ jobs:
         name: 下载并统计速度
         run: |
           yarn
-          timeout 120s node index.js --count ${{inputs.count}}
+          timeout 120s node index.js --count ${{env.TASK_COUNT}}
           # 下载文件并获取速度（字节/秒）
           # url=https://apt.mobileanjian.com/debs/old/com.cyjh.mobileanjian_1.8.1_default_iphoneos-arm.deb
           url=https://down-syouwan-com-1301430143.cos.ap-shanghai.myqcloud.com/myt.ipa
@@ -59,7 +51,7 @@ jobs:
           # 转换为 MB/s，保留两位小数
           speed_mb=$(awk "BEGIN {printf \"%.2f\", $speed/1024/1024}")
           echo "$speed_mb" > speed.txt
-          timeout 120s node index.js --count ${{inputs.count}} --path /download --value $speed_mb
+          timeout 120s node index.js --count ${{env.TASK_COUNT}} --path /download --value $speed_mb
 
       - name: 上传下载速度结果
         uses: actions/upload-artifact@v4
