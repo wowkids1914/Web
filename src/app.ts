@@ -66,13 +66,13 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         // timeout docker-compose down/stop 会触发 SIGTERM 信号
         githubAnnotation('error', 'SIGTERM: 终止请求');
         await screenshotAllPages();
-        process.exit(1);
+        process.exit();
     });
 
     process.on("unhandledRejection", async (e: Error) => {
-        githubAnnotation('error', "未处理的拒绝: " + e);
+        githubAnnotation('error', "未处理的拒绝: " + (e.stack || e));
         await screenshotAllPages();
-        process.exit(1);
+        process.exit();
     });
 
     const min = 100000000;
@@ -95,7 +95,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
     if (!username) {
         githubAnnotation('error', "用户名获取失败");
-        process.exit(1);
+        process.exit();
     }
 
     const wallet = Wallet.createRandom();
@@ -150,7 +150,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
         if (title != "Let's prove you're human") {
             githubAnnotation('error', "我们无法创建您的账户, " + title);
-            process.exit(0);
+            process.exit();
         }
 
         logger.info("等待验证真人");
@@ -185,7 +185,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
             if (process.uptime() > 180) {
                 githubAnnotation('error', "验证失败");
-                process.exit(1);
+                process.exit();
             }
         }
 
@@ -378,7 +378,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
         if (headless) {
             githubAnnotation('error', "无法自动验证");
-            process.exit(1);
+            process.exit();
         }
 
         await frame.click("//button[contains(., 'Visual puzzle')]");
