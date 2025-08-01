@@ -33,10 +33,57 @@ jobs:
       fail-fast: false
       matrix:
         job_id: ${{ fromJson(needs.prepare-matrix.outputs.ids) }}
+    outputs:
+      speed: ${{ steps.run-speed.outputs.speed }}
     steps:
-      - uses: actions/checkout@v4
+      # - uses: actions/checkout@v4
 
-      - name: 运行
+      - id: run-speed
+        name: 运行
         run: |
-          curl -O https://apt.mobileanjian.com/debs/old/com.cyjh.mobileanjian_1.8.1_default_iphoneos-arm.deb -w "%{speed_download}\n" | awk '{printf "Average speed: %.2f MB/s\n", $1/1024/1024}'
-      
+          # 下载并统计速度（MB/s）
+          speed=$(curl -O https://apt.mobileanjian.com/debs/old/com.cyjh.mobileanjian_1.8.1_default_iphoneos-arm.deb -w "%{speed_download}\n" | tail -1)
+          speed_mb=$(awk "BEGIN {printf \"%.2f\", $speed/1024/1024}")
+          echo "Average speed: ${speed_mb} MB/s"
+          echo "speed=${speed_mb}" >> $GITHUB_OUTPUT
+
+  summarize:
+    needs: concurrent-jobs
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: 汇总所有下载速度
+        run: |
+          # 收集所有 job 的下载速度
+          speeds=()
+          for id in $(seq 1 60); do
+            speed="${{ needs.concurrent-jobs.outputs.speed }}"
+            if [ -n "$speed" ]; then
+              speeds+=("$speed")
+            fi
+          done
+
+          # 计算平均、最大、最小速度
+          sum=0
+          max=0
+          min=10000
+          for s in "${speeds[@]}"; do
+            sum=$(awk "BEGIN {print $sum + $s}")
+            (( $(awk "BEGIN {print ($s > $max)}") )) && max=$s
+            (( $(awk "BEGIN {print ($s < $min)}") )) && min=$s
+          done
+          avg=$(awk "BEGIN {print $sum/${#speeds[@]} }")
+
+          # 输出到 workflow 摘要
+          echo "### 下载速度统计" >> $GITHUB_STEP_SUMMARY
+          echo "|编号|速度 (MB/s)|" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          idx=1
+          for s in "${speeds[@]}"; do
+            echo "|$idx|$s|" >> $GITHUB_STEP_SUMMARY
+            idx=$((idx+1))
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**平均速度：$avg MB/s**" >> $GITHUB_STEP_SUMMARY
+          echo "**最高速度：$max MB/s**" >> $GITHUB_STEP_SUMMARY
+          echo "**最低速度：$min MB/s**" >> $GITHUB_STEP_SUMMARY
