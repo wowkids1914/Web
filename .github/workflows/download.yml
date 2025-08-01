@@ -1,0 +1,42 @@
+on:
+  push:
+    paths:
+      - '.github/workflows/download.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TZ: Asia/Shanghai
+
+jobs:
+  prepare-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      ids: ${{ steps.set-matrix.outputs.ids }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set-matrix
+        run: |
+          count=60
+          ids=$(jq -c -n --argjson n "$count" '[range(1; $n+1)]')
+          echo "ids=$ids" >> $GITHUB_OUTPUT
+
+  concurrent-jobs:
+    needs: prepare-matrix
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      max-parallel: 20
+      fail-fast: false
+      matrix:
+        job_id: ${{ fromJson(needs.prepare-matrix.outputs.ids) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 运行
+        run: |
+          curl -O https://apt.mobileanjian.com/debs/old/com.cyjh.mobileanjian_1.8.1_default_iphoneos-arm.deb -w "%{speed_download}\n" | awk '{printf "Average speed: %.2f MB/s\n", $1/1024/1024}'
+      
