@@ -9,6 +9,7 @@ import { Wallet } from "ethers";
 import { faker } from '@faker-js/faker';
 import retry from 'async-retry';
 import { authenticator } from 'otplib';
+import githubAnnotation from './annotations.js';
 
 declare const protonMail: string;
 declare const protonPage: Page;
@@ -63,13 +64,13 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
     process.on('SIGTERM', async () => {
         // timeout docker-compose down/stop 会触发 SIGTERM 信号
-        logger.info('SIGTERM: 终止请求');
+        githubAnnotation('error', 'SIGTERM: 终止请求');
         await screenshotAllPages();
         process.exit(1);
     });
 
     process.on("unhandledRejection", async (e: Error) => {
-        logger.error("未处理的拒绝", e);
+        githubAnnotation('error', "未处理的拒绝: " + e);
         await screenshotAllPages();
         process.exit(1);
     });
@@ -93,7 +94,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     }, { retries: 10, factor: 1 }).catch(_ => undefined);
 
     if (!username) {
-        logger.error("用户名获取失败");
+        githubAnnotation('error', "用户名获取失败");
         process.exit(1);
     }
 
@@ -148,7 +149,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         const title = await outlookPage.textContent(`//h1[text()="Let's prove you're human" or text()="We can't create your account"]`, { timeout: 30_000 });
 
         if (title != "Let's prove you're human") {
-            logger.info("我们无法创建您的账户", title);
+            githubAnnotation('error', "我们无法创建您的账户, " + title);
             process.exit(1);
         }
 
@@ -183,7 +184,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
                 break;
 
             if (process.uptime() > 180) {
-                logger.error("验证失败");
+                githubAnnotation('error', "验证失败");
                 process.exit(1);
             }
         }
@@ -376,7 +377,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         logger.info("需要验证", page.url());
 
         if (headless) {
-            logger.error("无法自动验证");
+            githubAnnotation('error', "无法自动验证");
             process.exit(1);
         }
 
