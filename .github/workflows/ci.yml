@@ -34,47 +34,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run tests and create annotations
+      - name: 运行
         run: |
-          echo "::notice title=Build Started::The build process has begun."
-          echo "Simulating a test failure..."
-          # 假设这里的 app.js 文件存在于你的仓库中
-          echo "::warning file=app.js,line=5,title=Deprecation Warning::The 'request' library is deprecated. Consider using 'axios' or 'node-fetch'."
-          echo "::error file=app.js,line=12,title=Test Failed::Null pointer exception found in getUser function."
+          yarn
+          npx puppeteer browsers install firefox
+          yarn build && timeout -k 30s 300s yarn dev
 
-  #     - name: 运行
-  #       run: |
-  #         yarn
-  #         npx puppeteer browsers install firefox
-  #         yarn build && timeout -k 30s 300s yarn dev
+          cp $GITHUB_STEP_SUMMARY step-summary
+          truncate -s 0 $GITHUB_STEP_SUMMARY
 
-  #         cp $GITHUB_STEP_SUMMARY step-summary
-  #         truncate -s 0 $GITHUB_STEP_SUMMARY
+      - name: 上传 step summary artifact
+        if: always() && hashFiles('step-summary') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: step-summary-${{ matrix.job_id }}
+          path: step-summary
 
-  #     - name: 上传 step summary artifact
-  #       if: always() && hashFiles('step-summary') != ''
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: step-summary-${{ matrix.job_id }}
-  #         path: step-summary
+      - name: 上传 images 文件夹
+        if: always() && hashFiles('images/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: images-${{ matrix.job_id }}
+          path: images/
 
-  #     - name: 上传 images 文件夹
-  #       if: always() && hashFiles('images/**') != ''
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: images-${{ matrix.job_id }}
-  #         path: images/
+  collect-summary:
+    runs-on: ubuntu-latest
+    needs: concurrent-jobs
+    steps:
+      - name: 下载所有 job 的 step summary
+        uses: actions/download-artifact@v4
+        with:
+          path: summaries
 
-  # collect-summary:
-  #   runs-on: ubuntu-latest
-  #   needs: concurrent-jobs
-  #   steps:
-  #     - name: 下载所有 job 的 step summary
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         path: summaries
-
-  #     - name: 合并 step summary
-  #       run: |
-  #         # cat summaries/step-summary-*/* > $GITHUB_STEP_SUMMARY
-  #         jq -s '.' summaries/step-summary-*/* > $GITHUB_STEP_SUMMARY
+      - name: 合并 step summary
+        run: |
+          # cat summaries/step-summary-*/* > $GITHUB_STEP_SUMMARY
+          jq -s '.' summaries/step-summary-*/* > $GITHUB_STEP_SUMMARY
