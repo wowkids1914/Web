@@ -114,6 +114,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
                 await frame.click("//button[@id='unified-consent-continue-button']");
                 logger.info("点击了OK按钮");
                 clearInterval(consentCheckInterval);
+                return;
             }
         }
     }, 1_000);
@@ -121,10 +122,10 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     do {
         const emailContent = await outlookPage.textContent("//input[@aria-label='New email']", { timeout: MAX_TIMEOUT });
         emailContent && logger.info(emailContent, "昵称已经被使用");
-        await outlookPage.type("//input[@aria-label='New email']", username.replace(/^(\d)/, 'u$1') + (username ? Math.floor(Math.random() * 10000) : ""));
+        await outlookPage.type("//input[@aria-label='New email']", username.replace(/^(\d)/, 'u$1') + (emailContent ? Math.floor(Math.random() * 10000) : ""));
         await outlookPage.click("//button[normalize-space(text())='Next']");
-        await outlookPage.waitForNetworkIdle();
-    } while (!await outlookPage.$("//div[@id='identityBadge']"));
+        await outlookPage.waitForSelector("//div[contains(@class, 'fui-Field__validationMessage') and @role='alert'] | //input[@type='password']", { timeout: MAX_TIMEOUT });
+    } while (await outlookPage.$("//div[contains(@class, 'fui-Field__validationMessage') and @role='alert']"));
 
     const outlookMail = await outlookPage.textContent("//div[@id='identityBadge']");
     logger.info("Outlook 邮箱地址", outlookMail);
