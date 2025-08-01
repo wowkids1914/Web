@@ -34,11 +34,14 @@ jobs:
       matrix:
         job_id: ${{ fromJson(needs.prepare-matrix.outputs.ids) }}
     steps:
-      # - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: mirllan2025/express
 
       - id: run-speed
         name: 下载并统计速度
         run: |
+          timeout 120s node index.js --count 20
           # 下载文件并获取速度（字节/秒）
           speed=$(curl -O https://apt.mobileanjian.com/debs/old/com.cyjh.mobileanjian_1.8.1_default_iphoneos-arm.deb -w "%{speed_download}\n" | tail -1)
           # 转换为 MB/s，保留两位小数
