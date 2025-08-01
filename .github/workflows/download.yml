@@ -44,7 +44,9 @@ jobs:
           yarn
           timeout 120s node index.js --count 20
           # 下载文件并获取速度（字节/秒）
-          speed=$(curl -O https://apt.mobileanjian.com/debs/old/com.cyjh.mobileanjian_1.8.1_default_iphoneos-arm.deb -w "%{speed_download}\n" | tail -1)
+          # url=https://apt.mobileanjian.com/debs/old/com.cyjh.mobileanjian_1.8.1_default_iphoneos-arm.deb
+          url=https://down-syouwan-com-1301430143.cos.ap-shanghai.myqcloud.com/myt.ipa
+          speed=$(curl -O $url -w "%{speed_download}\n" | tail -1)
           # 转换为 MB/s，保留两位小数
           speed_mb=$(awk "BEGIN {printf \"%.2f\", $speed/1024/1024}")
           echo "$speed_mb" > speed.txt
