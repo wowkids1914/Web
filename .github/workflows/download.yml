@@ -25,9 +25,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: set-matrix
-        shell: bash
         run: |
-          count=${{inputs.count}} || 5
+          count=${{inputs.count}}
+          if [ -z "$count" ]; then
+            count=5
+          fi
           ids=$(jq -c -n --argjson n "$count" '[range(1; $n+1)]')
           echo "ids=$ids" >> $GITHUB_OUTPUT
 
