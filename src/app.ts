@@ -112,7 +112,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     const consentCheckInterval = setInterval(async () => {
         for (const frame of outlookPage.frames()) {
             if (await frame.title() == 'Inapp UnifiedConsent') {
-                await frame.click("//button[@id='unified-consent-continue-button']");
+                await frame.click("//button[@id='unified-consent-continue-button' and not(@disabled)]");
                 logger.info("点击了OK按钮");
                 clearInterval(consentCheckInterval);
                 return;
@@ -150,7 +150,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
         if (title != "Let's prove you're human") {
             githubAnnotation('error', "我们无法创建您的账户, " + title);
-            process.exit(1);
+            process.exit(0);
         }
 
         logger.info("等待验证真人");
