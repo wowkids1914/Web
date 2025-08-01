@@ -25,6 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: set-matrix
+        shell: bash
         run: |
           count=${{inputs.count}} || 5
           ids=$(jq -c -n --argjson n "$count" '[range(1; $n+1)]')
