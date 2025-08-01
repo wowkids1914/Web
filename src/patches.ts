@@ -102,8 +102,13 @@ Frame.prototype.click = async function (
     selector: string,
     options?: Readonly<ClickOptions>
 ): Promise<void> {
-    const handle = await this.waitForSelector(selector, options);
-    return handle.click(options);
+    try {
+        const handle = await this.waitForSelector(selector, options);
+        return handle.click(options);
+    }
+    catch (e) {
+        logger.error("❌click", selector, (options && JSON.stringify(options)) ?? "", e.message);
+    }
 };
 
 const originalType = Frame.prototype.type;
@@ -113,8 +118,13 @@ Frame.prototype.type = async function (
     text: string,
     options?: Readonly<KeyboardTypeOptions>
 ): Promise<void> {
-    await (await this.waitForSelector(selector, options)).click({ count: 3 });
-    return originalType.call(this, selector.startsWith("xpath=") ? selector : `xpath=${selector}`, text, options);
+    try {
+        await (await this.waitForSelector(selector, options)).click({ count: 3 });
+        return originalType.call(this, selector.startsWith("xpath=") ? selector : `xpath=${selector}`, text, options);
+    }
+    catch (e) {
+        logger.error("❌type", selector, text, (options && JSON.stringify(options)) ?? "", e.message);
+    }
 };
 
 const title = Frame.prototype.title;
