@@ -37,4 +37,8 @@ declare module 'puppeteer' {
     interface ClickOptions {
         timeout?: number;
     }
+
+    interface KeyboardTypeOptions {
+        timeout?: number;
+    }
 }

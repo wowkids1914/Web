@@ -113,7 +113,7 @@ Frame.prototype.type = async function (
     text: string,
     options?: Readonly<KeyboardTypeOptions>
 ): Promise<void> {
-    await (await this.waitForSelector(selector)).click({ count: 3 });
+    await (await this.waitForSelector(selector, options)).click({ count: 3 });
     return originalType.call(this, selector.startsWith("xpath=") ? selector : `xpath=${selector}`, text, options);
 };
 
@@ -250,7 +250,12 @@ Frame.prototype.textContent = async function <Selector extends string>(
     options?: WaitForSelectorOptions
 ): Promise<string> {
     const el = await this.$x(selector, options);
-    return el && this.evaluate(el => el.textContent.trim(), el);
+    return el && el.evaluate((el: Element) => {
+        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)
+            return el.value.trim();
+
+        return (el.textContent ?? '').trim();
+    });
 };
 
 Page.prototype.textContent = async function <Selector extends string>(

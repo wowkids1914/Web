@@ -118,14 +118,13 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         }
     }, 1_000);
 
-    await (await outlookPage.$x("//input[@aria-label='New email']", { timeout: MAX_TIMEOUT })).type(username.replace(/^(\d)/, 'u$1'));
-    await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
-
-    if (await outlookPage.$x("//div[contains(@class, 'fui-TagGroup')]//div[contains(@class, 'fui-InteractionTag')]", { timeout: 5_000 })) {
-        logger.info("昵称已经被使用");
-        await (await outlookPage.$x("//div[contains(@class, 'fui-TagGroup')]//div[contains(@class, 'fui-InteractionTag')][2]")).click();
-        await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
-    }
+    do {
+        const emailContent = await outlookPage.textContent("//input[@aria-label='New email']", { timeout: MAX_TIMEOUT });
+        emailContent && logger.info(emailContent, "昵称已经被使用");
+        await outlookPage.type("//input[@aria-label='New email']", username.replace(/^(\d)/, 'u$1') + (username ? Math.floor(Math.random() * 10000) : ""));
+        await outlookPage.click("//button[normalize-space(text())='Next']");
+        await outlookPage.waitForNetworkIdle();
+    } while (!await outlookPage.$("//div[@id='identityBadge']"));
 
     const outlookMail = await outlookPage.textContent("//div[@id='identityBadge']");
     logger.info("Outlook 邮箱地址", outlookMail);
@@ -212,7 +211,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     //         }
 
     //         logger.info("用户名已被使用，重新生成");
-    //         await (await accountFrame.$x(usernameSelector)).click({ count: 3 });
     //         await (await accountFrame.$x(usernameSelector)).type(outlookMail.split('@')[0] + Math.floor(Math.random() * 10000));
     //     }
     // })();
@@ -350,7 +348,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             break;
 
         await Utility.waitForSeconds(1);
-        await usernameElement.click({ count: 3 });
         await usernameElement.type(userMail.split('@')[0] + Math.floor(Math.random() * 10000));
     }
 
