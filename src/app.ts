@@ -110,13 +110,18 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     await outlookPage.goto("https://outlook.live.com/mail/0/?prompt=create_account");
 
     const consentCheckInterval = setInterval(async () => {
-        for (const frame of outlookPage.frames()) {
-            if (await frame.title() == 'Inapp UnifiedConsent') {
-                await frame.click("//button[@id='unified-consent-continue-button' and not(@disabled)]");
-                logger.info("点击了OK按钮");
-                clearInterval(consentCheckInterval);
-                return;
+        try {
+            for (const frame of outlookPage.frames()) {
+                if (await frame.title() == 'Inapp UnifiedConsent') {
+                    await frame.click("//button[@id='unified-consent-continue-button' and not(@disabled)]");
+                    logger.info("点击了OK按钮");
+                    clearInterval(consentCheckInterval);
+                    return;
+                }
             }
+        }
+        catch (e) {
+            logger.error("consentCheckInterval", e.message);
         }
     }, 1_000);
 
