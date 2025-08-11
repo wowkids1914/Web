@@ -183,7 +183,7 @@ Page.prototype.waitForFrame = async function (
     urlOrPredicate: string | ((frame: Frame) => Awaitable<boolean>),
     options?: WaitTimeoutOptions
 ): Promise<Frame> {
-    const timeout = options.timeout ?? 30_000;
+    const timeout = options?.timeout ?? 30_000;
     const endTime = Date.now() + timeout;
 
     logger.info("⏳waitForFrame", (options && JSON.stringify(options)) ?? "");
