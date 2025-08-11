@@ -252,6 +252,12 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         else {
             // 有时不能用邮箱验证
             logger.info("使用 CAPTCHA 验证");
+
+            if (headless) {
+                githubAnnotation('error', "无法自动验证");
+                process.exit();
+            }
+
             await protonPage.$x("//button[.//span[text()='CAPTCHA']]", { hidden: true, timeout: MAX_TIMEOUT });
         }
 
