@@ -137,19 +137,19 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     logger.info("Outlook 邮箱地址", outlookMail);
 
     if (process.env.ENABLE_OUTLOOK_REGISTER != "0") {
-        await (await outlookPage.$x("//input[@type='password']")).type(password);
-        await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
+        await outlookPage.type("//input[@type='password']", password);
+        await outlookPage.click("//button[normalize-space(text())='Next']");
 
-        await (await outlookPage.$x("//button[@id='BirthMonthDropdown']")).click();
-        await (await outlookPage.$x(`(//div[@role='option'])[${Math.floor(Math.random() * 12) + 1}]`)).click();
-        await (await outlookPage.$x("//button[@id='BirthDayDropdown']")).click();
-        await (await outlookPage.$x(`(//div[@role='option'])[${Math.floor(Math.random() * 28) + 1}]`)).click();
-        await (await outlookPage.$x('//input[@name="BirthYear"]')).type(String(1980 + Math.floor(Math.random() * 30)));
-        await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
+        await outlookPage.click("//button[@id='BirthMonthDropdown']");
+        await outlookPage.click(`(//div[@role='option'])[${Math.floor(Math.random() * 12) + 1}]`);
+        await outlookPage.click("//button[@id='BirthDayDropdown']");
+        await outlookPage.click(`(//div[@role='option'])[${Math.floor(Math.random() * 28) + 1}]`);
+        await outlookPage.type('//input[@name="BirthYear"]', String(1980 + Math.floor(Math.random() * 30)));
+        await outlookPage.click("//button[normalize-space(text())='Next']");
 
-        await (await outlookPage.$x("//input[@id='firstNameInput']")).type(firstName);
-        await (await outlookPage.$x("//input[@id='lastNameInput']")).type(lastName);
-        await (await outlookPage.$x("//button[normalize-space(text())='Next']")).click();
+        await outlookPage.type("//input[@id='firstNameInput']", firstName);
+        await outlookPage.type("//input[@id='lastNameInput']", lastName);
+        await outlookPage.click("//button[normalize-space(text())='Next']");
 
         const title = await outlookPage.textContent(`//h1[text()="Let's prove you're human" or text()="We can't create your account"]`, { timeout: 30_000 });
 
@@ -204,13 +204,13 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         await protonPage.goto("https://account.proton.me/mail/signup?plan=free");
 
         const accountFrame = await protonPage.waitForFrame(frame => frame.url() == "https://account-api.proton.me/challenge/v4/html?Type=0&Name=email");
-        await (await accountFrame.$x("//input[@id='username']")).type(outlookMail.split('@')[0]);
-        await (await protonPage.$x("//input[@id='password']")).type(password);
-        await (await protonPage.$x("//input[@id='password-confirm']")).type(password);
+        await accountFrame.type("//input[@id='username']", outlookMail.split('@')[0]);
+        await protonPage.type("//input[@id='password']", password);
+        await protonPage.type("//input[@id='password-confirm']", password);
 
         const protonMail = await (async () => {
             while (true) {
-                await (await protonPage.$x("//button[text()='Start using Proton Mail now']")).click();
+                await protonPage.click("//button[text()='Start using Proton Mail now']");
 
                 const usernameSelector = "xpath=//input[@id='username']";
                 if (!await accountFrame.$x("//span[text()='Username already used']", { timeout: 5_000 })) {
@@ -219,13 +219,13 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
                 }
 
                 logger.info("用户名已被使用，重新生成");
-                await (await accountFrame.$x(usernameSelector)).type(outlookMail.split('@')[0] + Math.floor(Math.random() * 10000));
+                await accountFrame.type(usernameSelector, outlookMail.split('@')[0] + Math.floor(Math.random() * 10000));
             }
         })();
 
         logger.info("Proton 邮箱地址", protonMail);
 
-        await (await protonPage.$x("//button[text()='No, thanks']")).click();
+        await protonPage.click("//button[text()='No, thanks']");
 
         await protonPage.$x("//h1[text()='Human Verification']");
 
@@ -234,20 +234,20 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             await emailVerification.hover();
             await emailVerification.click();
 
-            await (await protonPage.$x("//input[@id='email']")).type(outlookMail);
-            await (await protonPage.$x("//button[text()='Get verification code']")).click();
+            await protonPage.type("//input[@id='email']", outlookMail);
+            await protonPage.click("//button[text()='Get verification code']");
 
             logger.info("等待验证邮件");
             await outlookPage.bringToFront();
-            await (await outlookPage.$x("//span[text()='Proton Verification Code']", { timeout: MAX_TIMEOUT })).click();
+            await outlookPage.click("//span[text()='Proton Verification Code']", { timeout: MAX_TIMEOUT });
             const code = await outlookPage.textContent("//*[contains(text(),'Your Proton verification code')]/following::span[string-length(normalize-space(text()))=6 and string-length(translate(normalize-space(text()), '0123456789', ''))=0]", { timeout: MAX_TIMEOUT });
             logger.info("收到验证邮件", code);
-            await (await outlookPage.$x("(//button[.//span[text()='Delete this message. (Delete)']])[1]")).click();
+            await outlookPage.click("(//button[.//span[text()='Delete this message. (Delete)']])[1]");
             await outlookPage.goto("https://outlook.live.com/mail/0/");
 
             await protonPage.bringToFront();
-            await (await protonPage.$x("//input[@id='verification']")).type(code);
-            await (await protonPage.$x("//button[text()='Verify']")).click();
+            await protonPage.type("//input[@id='verification']", code);
+            await protonPage.click("//button[text()='Verify']");
         }
         else {
             // 有时不能用邮箱验证
@@ -256,39 +256,39 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         }
 
         // Set a display name
-        await (await protonPage.$x("//button[text()='Continue']")).click();
+        await protonPage.click("//button[text()='Continue']");
         // Set up a recovery method
-        await (await protonPage.$x("//button[text()='Maybe later']")).click();
+        await protonPage.click("//button[text()='Maybe later']");
         // Warning
-        await (await protonPage.$x("//button[text()='Confirm']")).click();
+        await protonPage.click("//button[text()='Confirm']");
         // Welcome to Proton Mail
-        await (await protonPage.$x("//button[text()=\"Let's get started\"]")).click();
-        await (await protonPage.$x("//button[text()='Maybe later']")).click();
-        await (await protonPage.$x("//button[text()='Next']")).click();
-        await (await protonPage.$x("//button[text()='Use this']")).click();
+        await protonPage.click("//button[text()=\"Let's get started\"]");
+        await protonPage.click("//button[text()='Maybe later']");
+        await protonPage.click("//button[text()='Next']");
+        await protonPage.click("//button[text()='Use this']");
 
         await protonPage.goto("https://account.proton.me/u/0/mail/recovery");
-        await (await protonPage.$x("//a[text()='Safeguard account now']")).click();
-        await (await protonPage.$x("//div[normalize-space(.)='Show more (2)']")).click();
-        await (await protonPage.$x("//h2[text()='Add a recovery email address']")).click();
-        await (await protonPage.$x("//input[@id='recovery-email-input']")).type(outlookMail);
-        await (await protonPage.$x("//button[text()='Add email address']")).click();
-        await (await protonPage.$x("//input[@id='password']")).type(password);
-        await (await protonPage.$x("//button[text()='Authenticate']")).click();
+        await protonPage.click("//a[text()='Safeguard account now']");
+        await protonPage.click("//div[normalize-space(.)='Show more (2)']");
+        await protonPage.click("//h2[text()='Add a recovery email address']");
+        await protonPage.type("//input[@id='recovery-email-input']", outlookMail);
+        await protonPage.click("//button[text()='Add email address']");
+        await protonPage.type("//input[@id='password']", password);
+        await protonPage.click("//button[text()='Authenticate']");
 
         logger.info("等待验证邮件");
         await outlookPage.bringToFront();
-        await (await outlookPage.$x("//span[text()='Proton Verification Code']", { timeout: MAX_TIMEOUT })).click();
+        await outlookPage.click("//span[text()='Proton Verification Code']", { timeout: MAX_TIMEOUT });
         const code = await outlookPage.textContent("//*[contains(text(),'Your Proton verification code')]/following::span[string-length(normalize-space(text()))=6 and string-length(translate(normalize-space(text()), '0123456789', ''))=0]", { timeout: MAX_TIMEOUT });
         logger.info("收到验证邮件", code);
-        await (await outlookPage.$x("(//button[.//span[text()='Delete this message. (Delete)']])[1]")).click();
+        await outlookPage.click("(//button[.//span[text()='Delete this message. (Delete)']])[1]");
         await outlookPage.goto("https://outlook.live.com/mail/0/");
 
         await protonPage.bringToFront();
         for (let i = 0; i < 6; i++) {
-            await (await protonPage.$x(`//input[@aria-label='Enter verification code. Digit ${i + 1}.']`)).type(code[i]);
+            await protonPage.type(`//input[@aria-label='Enter verification code. Digit ${i + 1}.']`, code[i]);
         }
-        await (await protonPage.$x("//button[text()='Verify']")).click();
+        await protonPage.click("//button[text()='Verify']");
 
         await protonPage.goto("https://mail.proton.me/u/0");
         logger.info("Proton Mail 设置完成");
