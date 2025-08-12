@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
       - id: set-matrix
         run: |
-          count=50
+          count=60
           ids=$(jq -c -n --argjson n "$count" '[range(1; $n+1)]')
           echo "ids=$ids" >> $GITHUB_OUTPUT
 
