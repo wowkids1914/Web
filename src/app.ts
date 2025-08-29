@@ -456,12 +456,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
     await (await page.$x("//button[contains(., 'Done')]")).click();
 
-    if (headless) {
-        const data = JSON.stringify([account, password, otpSecret, new Date().toString()]);
-        Utility.appendStepSummary(data);
-        process.exit();
-    }
-
     await (await page.$x("//a[@href='/settings/apps']")).click();// Developer settings
     await Utility.waitForSeconds(1);
     await (await page.$x("//button[@id='personal-access-tokens-menu-item']")).click();
@@ -483,6 +477,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     await (await page.$x("//button[normalize-space(text())='Generate token']")).click();
     const token = await page.textContent("//code[@id='new-oauth-token']");
 
-    const data = ["", `# ${new Date().toString()}`, JSON.stringify([account, password, otpSecret]), `GITHUB_USERNAME=${account}`, `GITHUB_PASSWORD=${password}`, `GITHUB_SECRET=${otpSecret}`, `# https://${token}@github.com/${account}/${account}.git`, ""].join('\n');
-    logger.info(data);
+    const data = JSON.stringify([account, password, otpSecret, token, new Date().toString()]);
+    Utility.appendStepSummary(data);
+    headless && process.exit();
 })();
