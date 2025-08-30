@@ -255,7 +255,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
             if (headless) {
                 githubAnnotation('error', "无法自动验证");
-                process.exit();
+                process.exit(1);
             }
 
             await protonPage.$x("//button[.//span[text()='CAPTCHA']]", { hidden: true, timeout: MAX_TIMEOUT });
@@ -395,7 +395,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
         if (headless) {
             githubAnnotation('error', "无法自动验证");
-            process.exit();
+            process.exit(1);
         }
 
         await frame.click("//button[contains(., 'Visual puzzle')]");
