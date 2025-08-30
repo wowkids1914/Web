@@ -130,8 +130,8 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         emailContent && logger.info(emailContent, "昵称已经被使用");
         await outlookPage.type("//input[@aria-label='New email']", username.replace(/^(\d)/, 'u$1') + (emailContent ? Math.floor(Math.random() * 10000) : ""));
         await outlookPage.click("//button[normalize-space(text())='Next']");
-        await outlookPage.waitForSelector("//div[contains(@class, 'fui-Field__validationMessage') and @role='alert'] | //input[@type='password']", { timeout: MAX_TIMEOUT });
-    } while (await outlookPage.$("//div[contains(@class, 'fui-Field__validationMessage') and @role='alert']"));
+        await outlookPage.waitForSelector("//div[contains(@class, 'fui-Field__validationMessage') and @role='alert' and not(@disabled)] | //input[@type='password']", { timeout: MAX_TIMEOUT });
+    } while (await outlookPage.$("//div[contains(@class, 'fui-Field__validationMessage') and @role='alert' and not(@disabled)]"));
 
     const outlookMail = await outlookPage.textContent("//div[@id='identityBadge']");
     logger.info("Outlook 邮箱地址", outlookMail);
