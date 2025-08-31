@@ -130,8 +130,8 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         emailContent && logger.info(emailContent, "昵称已经被使用");
         await outlookPage.type("//input[@aria-label='New email']", username.replace(/^(\d)/, 'u$1') + (emailContent ? Math.floor(Math.random() * 10000) : ""));
         await outlookPage.click("//button[normalize-space(text())='Next']");
-        await outlookPage.waitForSelector("//div[contains(@class, 'fui-Field__validationMessage') and @role='alert' and not(@disabled)] | //input[@type='password']", { timeout: MAX_TIMEOUT });
-    } while (await outlookPage.$("//div[contains(@class, 'fui-Field__validationMessage') and @role='alert' and not(@disabled)]"));
+        await outlookPage.waitForSelector("//div[contains(@class, 'fui-Field__validationMessage') and @role='alert'] | //input[@type='password']", { timeout: MAX_TIMEOUT });
+    } while (await outlookPage.$("//div[contains(@class, 'fui-Field__validationMessage') and @role='alert']"));
 
     const outlookMail = await outlookPage.textContent("//div[@id='identityBadge']");
     logger.info("Outlook 邮箱地址", outlookMail);
@@ -197,6 +197,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         logger.info("验证通过", outlookPage.url());
         await outlookPage.$x("//span[@id='EmptyState_MainMessage']", { timeout: MAX_TIMEOUT });
         logger.info(`邮箱创建完成，耗时${Math.round(process.uptime())}秒`);
+        // !headless && await Utility.waitForSeconds(MAX_TIMEOUT);
     }
 
     if (process.env.ENABLE_PROTON_REGISTER) {
@@ -477,7 +478,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     await (await page.$x("//button[normalize-space(text())='Generate token']")).click();
     const token = await page.textContent("//code[@id='new-oauth-token']");
 
-    const data = JSON.stringify([account, password, otpSecret, token, new Date().toString()]);
+    const data = JSON.stringify([account, password, otpSecret, token.substring(4), new Date().toString()]);
     Utility.appendStepSummary(data);
     headless && process.exit();
 })();
