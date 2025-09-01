@@ -12,6 +12,7 @@ concurrency:
 env:
   TZ: Asia/Shanghai
   # ENABLE_PROTON_REGISTER: 1
+  ENABLE_CHATGPT_REGISTER: 1
 
 jobs:
   prepare-matrix:
@@ -22,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
       - id: set-matrix
         run: |
-          count=200
+          count=10
           ids=$(jq -c -n --argjson n "$count" '[range(1; $n+1)]')
           echo "ids=$ids" >> $GITHUB_OUTPUT
 
