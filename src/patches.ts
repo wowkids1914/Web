@@ -48,10 +48,15 @@ Page.prototype.goto = async function (
             logger.info("⏳goto", url, (options && JSON.stringify(options)) ?? "");
 
             const response = await originalGoto.call(this, url, options);
-            if (response.ok())
-                return response;
+            if (response) {
+                if (response.ok())
+                    return response;
 
-            logger.error("❌goto", url, (options && JSON.stringify(options)) ?? "", response.status(), STATUS_CODES[response.status()]);
+                logger.error("❌goto", url, (options && JSON.stringify(options)) ?? "", response.status(), STATUS_CODES[response.status()]);
+            }
+            else {
+                logger.warn("⚠️goto", url, (options && JSON.stringify(options)) ?? "");
+            }
         }
         catch (e) {
             logger.error("❌goto", url, (options && JSON.stringify(options)) ?? "", e.message);
@@ -71,10 +76,15 @@ Page.prototype.waitForNavigation = async function (
     try {
         const response = await originalWaitForNavigation.call(this, options);
 
-        if (response.ok())
-            logger.info("✅waitForNavigation", this.url());
-        else
-            logger.error("❌waitForNavigation", this.url(), (options && JSON.stringify(options)) ?? "", response.status(), STATUS_CODES[response.status()]);
+        if (response) {
+            if (response.ok())
+                logger.info("✅waitForNavigation", this.url());
+            else
+                logger.error("❌waitForNavigation", this.url(), (options && JSON.stringify(options)) ?? "", response.status(), STATUS_CODES[response.status()]);
+        }
+        else {
+            logger.warn("⚠️waitForNavigation", this.url(), (options && JSON.stringify(options)) ?? "");
+        }
 
         return response;
     }

@@ -199,38 +199,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         }, 1_000);
     }
 
-    if (process.env.ENABLE_CHATGPT_REGISTER) {
-        const page = await chrome.newPage();
-        await page.goto("https://chatgpt.com/");
-        await page.click("//button[contains(., 'Sign up for free')]");
-        await page.waitForNavigation();
-
-        await page.click("//button[normalize-space(text())='Continue with Microsoft Account']");
-        await page.waitForNavigation();
-        await page.click("//button[normalize-space(text())='Accept']");
-
-        await page.type("//input[@placeholder='Full name']", outlookMail.split('@')[0].replace(/[^a-zA-Z]/g, ''));
-        await page.type('//div[contains(@id,"-birthday")]//div[@contenteditable="true" and @data-type="month"]', String(Math.floor(Math.random() * 12) + 1));
-        await page.type('//div[contains(@id,"-birthday")]//div[@contenteditable="true" and @data-type="day"]', String(Math.floor(Math.random() * 28) + 1));
-        await page.type('//div[contains(@id,"-birthday")]//div[@contenteditable="true" and @data-type="year"]', String(1980 + Math.floor(Math.random() * 30)));
-        await page.click("//button[contains(., 'Continue')]");
-        await page.waitForNavigation();
-
-        await page.goto("https://chatgpt.com/#settings/Security");
-        await page.click("//button[@aria-label='Multi-factor authentication']");
-        await page.click("//span[contains(., 'Trouble scanning?')]");
-        const otpSecret = await page.textContent("//button[text()='Copy code']/preceding-sibling::div");
-        await page.type("//input[@name='code']", authenticator.generate(otpSecret));
-        await page.click("//button[contains(., 'Continue')]");
-        await page.click("//input[@id='safelyRecorded']");
-        await page.click("//button[contains(., 'Continue') and not(@disabled)]");
-
-        const data = JSON.stringify([outlookMail, password, otpSecret, new Date().toString()]);
-        Utility.appendStepSummary(data);
-        headless && process.exit();
-        return;
-    }
-
     if (process.env.ENABLE_PROTON_REGISTER) {
         const protonPage = await chrome.newPage();
         await protonPage.goto("https://account.proton.me/mail/signup?plan=free");
@@ -338,6 +306,49 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
     const userMail = typeof protonMail != "undefined" ? protonMail : outlookMail;
     const mailPage = typeof protonPage != "undefined" ? protonPage : outlookPage;
+
+    if (process.env.ENABLE_CHATGPT_REGISTER) {
+        const page = await chrome.newPage();
+        await page.goto("https://chatgpt.com/");
+        await page.click("//button[contains(., 'Sign up for free')]");
+        await page.waitForNavigation();
+
+        await page.type("//input[@name='email']", userMail);
+        await page.click("//button[contains(., 'Continue')]");
+        await page.type("//input[@name='new-password']", password);
+        await page.click("//button[contains(., 'Continue')]");
+
+        logger.info("等待验证邮件", page.url());
+        await mailPage.bringToFront();
+        const text = await mailPage.textContent("//span[contains(., 'Your ChatGPT code is')]", { timeout: MAX_TIMEOUT });
+        const code = text.match(/\b\d{6}\b/)[0];
+        logger.info("收到验证邮件", code);
+
+        await page.bringToFront();
+        await page.type("//input[@name='code']", code);
+        await page.click("//button[contains(., 'Continue')]");
+
+        await page.type("//input[@placeholder='Full name']", userMail.split('@')[0].replace(/[^a-zA-Z]/g, ''));
+        await page.type('//div[contains(@id,"-birthday")]//div[@contenteditable="true" and @data-type="month"]', String(Math.floor(Math.random() * 12) + 1));
+        await page.type('//div[contains(@id,"-birthday")]//div[@contenteditable="true" and @data-type="day"]', String(Math.floor(Math.random() * 28) + 1));
+        await page.type('//div[contains(@id,"-birthday")]//div[@contenteditable="true" and @data-type="year"]', String(1980 + Math.floor(Math.random() * 30)));
+        await page.click("//button[contains(., 'Continue')]");
+        await page.waitForNavigation();
+
+        await page.goto("https://chatgpt.com/#settings/Security");
+        await page.click("//button[@aria-label='Multi-factor authentication']");
+        await page.click("//span[contains(., 'Trouble scanning?')]");
+        const otpSecret = await page.textContent("//button[text()='Copy code']/preceding-sibling::div");
+        await page.type("//input[@name='code']", authenticator.generate(otpSecret));
+        await page.click("//button[contains(., 'Continue')]");
+        await page.click("//input[@id='safelyRecorded']");
+        await page.click("//button[contains(., 'Continue') and not(@disabled)]");
+
+        const data = JSON.stringify([userMail, password, otpSecret, new Date().toString()]);
+        Utility.appendStepSummary(data);
+        headless && process.exit();
+        return;
+    }
 
     const firefox = os.platform() != 'linux' && await puppeteer.launch({
         browser: "firefox",
