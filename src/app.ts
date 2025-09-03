@@ -441,6 +441,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             break;
 
         await Utility.waitForSeconds(1);
+        await usernameElement.click({ count: 3 });
         await usernameElement.type(userMail.split('@')[0] + Math.floor(Math.random() * 10000));
     }
 
