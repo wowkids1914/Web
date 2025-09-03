@@ -11,8 +11,9 @@ concurrency:
 
 env:
   TZ: Asia/Shanghai
-  # ENABLE_PROTON_REGISTER: 1
-  ENABLE_CHATGPT_REGISTER: 1
+  UPSTASH_REDIS_URL: https://arriving-drake-53801.upstash.io
+  UPSTASH_REDIS_TOKEN: AdIpAAIncDE0OTNiMzNiNDQyYzM0NTMyOTMwY2E3Yzk4YzQ1YTAyZXAxNTM4MDE
+  OUTLOOK_REGISTER_LIMIT: 1
 
 jobs:
   prepare-matrix:
@@ -26,6 +27,10 @@ jobs:
           count=10
           ids=$(jq -c -n --argjson n "$count" '[range(1; $n+1)]')
           echo "ids=$ids" >> $GITHUB_OUTPUT
+
+          curl -X POST \
+            "$UPSTASH_REDIS_URL/del/OUTLOOK_REGISTER_LIMIT" \
+            -H "Authorization: Bearer $UPSTASH_REDIS_TOKEN"
 
   concurrent-jobs:
     needs: prepare-matrix

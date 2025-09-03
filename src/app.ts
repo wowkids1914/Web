@@ -10,6 +10,14 @@ import { faker } from '@faker-js/faker';
 import retry from 'async-retry';
 import { authenticator } from 'otplib';
 import githubAnnotation from './annotations.js';
+import { Redis } from '@upstash/redis';
+
+const { ENABLE_OUTLOOK_REGISTER, OUTLOOK_REGISTER_LIMIT, ENABLE_PROTON_REGISTER, ENABLE_CHATGPT_REGISTER, UPSTASH_REDIS_URL, UPSTASH_REDIS_TOKEN } = process.env;
+
+const redis = new Redis({
+    url: UPSTASH_REDIS_URL,
+    token: UPSTASH_REDIS_TOKEN
+});
 
 declare const protonMail: string;
 declare const protonPage: Page;
@@ -120,7 +128,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     const outlookMail = await outlookPage.textContent("//div[@id='identityBadge']");
     logger.info("Outlook 邮箱地址", outlookMail);
 
-    if (process.env.ENABLE_OUTLOOK_REGISTER != "0") {
+    if (ENABLE_OUTLOOK_REGISTER != "0") {
         await outlookPage.type("//input[@type='password']", password);
         await outlookPage.click("//button[normalize-space(text())='Next']");
 
@@ -153,6 +161,12 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         await Utility.waitForSeconds(5);
 
         while (true) {
+            const value = await redis.get("OUTLOOK_REGISTER_LIMIT");
+            if (value >= OUTLOOK_REGISTER_LIMIT) {
+                githubAnnotation('error', "已达到注册上限");
+                process.exit(1);
+            }
+
             logger.info("模拟移动鼠标");
 
             await Utility.humanLikeMouseMove(
@@ -178,6 +192,14 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             }
         }
 
+        const value = await redis.get("OUTLOOK_REGISTER_LIMIT");
+        if (value >= OUTLOOK_REGISTER_LIMIT) {
+            githubAnnotation('error', "已达到注册上限");
+            process.exit(1);
+        }
+
+        await redis.incr("OUTLOOK_REGISTER_LIMIT");
+
         logger.info("验证通过", outlookPage.url());
         await outlookPage.$x("//span[@id='EmptyState_MainMessage']", { timeout: MAX_TIMEOUT });
         logger.info(`邮箱创建完成，耗时${Math.round(process.uptime())}秒`);
@@ -186,9 +208,13 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             try {
                 for (const frame of outlookPage.frames()) {
                     if (await frame.title() == 'Inapp UnifiedConsent') {
-                        await frame.click("//button[@id='unified-consent-continue-button' and not(@disabled)]");
-                        logger.info("点击了OK按钮");
-                        clearInterval(consentCheckInterval);
+                        const ok = await frame.$("//button[@id='unified-consent-continue-button' and not(@disabled)]");
+                        if (ok) {
+                            await ok.click();
+                            logger.info("点击了OK按钮");
+                            clearInterval(consentCheckInterval);
+                        }
+
                         return;
                     }
                 }
@@ -199,7 +225,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         }, 1_000);
     }
 
-    if (process.env.ENABLE_PROTON_REGISTER) {
+    if (ENABLE_PROTON_REGISTER) {
         const protonPage = await chrome.newPage();
         await protonPage.goto("https://account.proton.me/mail/signup?plan=free");
 
@@ -307,7 +333,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     const userMail = typeof protonMail != "undefined" ? protonMail : outlookMail;
     const mailPage = typeof protonPage != "undefined" ? protonPage : outlookPage;
 
-    if (process.env.ENABLE_CHATGPT_REGISTER) {
+    if (ENABLE_CHATGPT_REGISTER) {
         const page = await chrome.newPage();
         await page.goto("https://chatgpt.com/");
         await page.click("//button[contains(., 'Sign up for free')]");
