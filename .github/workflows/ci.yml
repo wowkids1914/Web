@@ -7,8 +7,8 @@ on:
         type: string
       register_limit:
         description: '注册限制'
-        default: '0'
-        type: string
+        default: 0
+        type: number
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
