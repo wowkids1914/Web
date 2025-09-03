@@ -163,7 +163,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
         while (true) {
             if (OUTLOOK_REGISTER_LIMIT) {
-                const value = await redis.get("OUTLOOK_REGISTER_LIMIT");
+                const value: number = await redis.get("OUTLOOK_REGISTER_LIMIT");
                 if (value >= OUTLOOK_REGISTER_LIMIT) {
                     githubAnnotation('error', "已达到注册上限");
                     process.exit(1);
@@ -196,7 +196,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         }
 
         if (OUTLOOK_REGISTER_LIMIT) {
-            const value = await redis.get("OUTLOOK_REGISTER_LIMIT");
+            const value: number = await redis.get("OUTLOOK_REGISTER_LIMIT");
             if (value >= OUTLOOK_REGISTER_LIMIT) {
                 githubAnnotation('error', "已达到注册上限");
                 process.exit(1);
