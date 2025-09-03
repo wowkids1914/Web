@@ -1,9 +1,14 @@
 on:
-  push:
-    paths:
-      - '.github/workflows/ci.yml'
-      - 'src/**'
   workflow_dispatch:
+    inputs:
+      task_count:
+        description: '任务数量'
+        default: '1'
+        type: string
+      register_limit:
+        description: '注册限制'
+        default: '0'
+        type: string
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -13,8 +18,8 @@ env:
   TZ: Asia/Shanghai
   UPSTASH_REDIS_URL: https://arriving-drake-53801.upstash.io
   UPSTASH_REDIS_TOKEN: AdIpAAIncDE0OTNiMzNiNDQyYzM0NTMyOTMwY2E3Yzk4YzQ1YTAyZXAxNTM4MDE
-  # OUTLOOK_REGISTER_LIMIT: 1
-  ENABLE_CHATGPT_REGISTER: 1
+  OUTLOOK_REGISTER_LIMIT: ${{ inputs.register_limit }}
+  # ENABLE_CHATGPT_REGISTER: 1
 
 jobs:
   prepare-matrix:
@@ -25,7 +30,7 @@ jobs:
       - uses: actions/checkout@v4
       - id: set-matrix
         run: |
-          count=10
+          count=${{ inputs.task_count }}
           ids=$(jq -c -n --argjson n "$count" '[range(1; $n+1)]')
           echo "ids=$ids" >> $GITHUB_OUTPUT
 
