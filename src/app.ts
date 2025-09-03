@@ -12,7 +12,8 @@ import { authenticator } from 'otplib';
 import githubAnnotation from './annotations.js';
 import { Redis } from '@upstash/redis';
 
-const { ENABLE_OUTLOOK_REGISTER, OUTLOOK_REGISTER_LIMIT, ENABLE_PROTON_REGISTER, ENABLE_CHATGPT_REGISTER, UPSTASH_REDIS_URL, UPSTASH_REDIS_TOKEN } = process.env;
+const { ENABLE_OUTLOOK_REGISTER, ENABLE_PROTON_REGISTER, ENABLE_CHATGPT_REGISTER, UPSTASH_REDIS_URL, UPSTASH_REDIS_TOKEN } = process.env;
+const OUTLOOK_REGISTER_LIMIT = Number(process.env.OUTLOOK_REGISTER_LIMIT);
 
 const redis = new Redis({
     url: UPSTASH_REDIS_URL,
@@ -161,10 +162,12 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         await Utility.waitForSeconds(5);
 
         while (true) {
-            const value = await redis.get("OUTLOOK_REGISTER_LIMIT");
-            if (value >= OUTLOOK_REGISTER_LIMIT) {
-                githubAnnotation('error', "已达到注册上限");
-                process.exit(1);
+            if (OUTLOOK_REGISTER_LIMIT) {
+                const value = await redis.get("OUTLOOK_REGISTER_LIMIT");
+                if (value >= OUTLOOK_REGISTER_LIMIT) {
+                    githubAnnotation('error', "已达到注册上限");
+                    process.exit(1);
+                }
             }
 
             logger.info("模拟移动鼠标");
@@ -192,13 +195,15 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             }
         }
 
-        const value = await redis.get("OUTLOOK_REGISTER_LIMIT");
-        if (value >= OUTLOOK_REGISTER_LIMIT) {
-            githubAnnotation('error', "已达到注册上限");
-            process.exit(1);
-        }
+        if (OUTLOOK_REGISTER_LIMIT) {
+            const value = await redis.get("OUTLOOK_REGISTER_LIMIT");
+            if (value >= OUTLOOK_REGISTER_LIMIT) {
+                githubAnnotation('error', "已达到注册上限");
+                process.exit(1);
+            }
 
-        await redis.incr("OUTLOOK_REGISTER_LIMIT");
+            await redis.incr("OUTLOOK_REGISTER_LIMIT");
+        }
 
         logger.info("验证通过", outlookPage.url());
         await outlookPage.$x("//span[@id='EmptyState_MainMessage']", { timeout: MAX_TIMEOUT });
