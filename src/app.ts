@@ -12,7 +12,7 @@ import { authenticator } from 'otplib';
 import githubAnnotation from './annotations.js';
 import { Redis } from '@upstash/redis';
 
-const { ENABLE_OUTLOOK_REGISTER, ENABLE_PROTON_REGISTER, ENABLE_CHATGPT_REGISTER, UPSTASH_REDIS_URL, UPSTASH_REDIS_TOKEN } = process.env;
+const { ENABLE_OUTLOOK_REGISTER, ENABLE_PROTON_REGISTER, ENABLE_CHATGPT_REGISTER, ENABLE_DOCKER_REGISTER, UPSTASH_REDIS_URL, UPSTASH_REDIS_TOKEN } = process.env;
 const OUTLOOK_REGISTER_LIMIT = Number(process.env.OUTLOOK_REGISTER_LIMIT);
 
 const redis = new Redis({
@@ -151,13 +151,13 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             process.exit(1);
         }
 
-        logger.info("等待验证真人");
-
         const button = await outlookPage.$x("//span[text()='Press and hold the button.']");
         const rect = await outlookPage.evaluate(el => {
             const { x, y, width, height } = el.getBoundingClientRect();
             return { x, y, width, height };
         }, button);
+
+        logger.info("等待验证真人", rect);
 
         await Utility.waitForSeconds(5);
 
@@ -175,7 +175,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             await Utility.humanLikeMouseMove(
                 outlookPage.mouse,
                 { x: rect.x + Math.random() * rect.width, y: rect.y + Math.random() * rect.height },
-                { x: rect.x + Math.random() * rect.width, y: rect.y + 70 },
+                { x: rect.x + Math.random() * rect.width, y: rect.y + 60 },
                 40
             );
 
@@ -332,7 +332,8 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
         const data = JSON.stringify([protonMail.split('@')[0], password, new Date().toString()]);
         Utility.appendStepSummary(data);
-        process.exit();
+        headless && process.exit();
+        return;
     }
 
     const userMail = typeof protonMail != "undefined" ? protonMail : outlookMail;
@@ -377,6 +378,25 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
         const data = JSON.stringify([userMail, password, otpSecret, new Date().toString()]);
         Utility.appendStepSummary(data);
+        headless && process.exit();
+        return;
+    }
+
+    if (ENABLE_DOCKER_REGISTER) {
+        const page = await chrome.newPage();
+        await page.goto("https://app.docker.com/");
+        await page.click("//a[@id='signup']");
+        await page.waitForNavigation();
+        // await page.click("//button[text()='Personal']");
+
+        await page.type("//input[@name='email']", userMail);
+        await page.type("//input[@name='username']", userMail.split('@')[0]);
+        await page.type("//input[@name='password']", password);
+        await page.click("//button[text()='Sign up' and not(@disabled)]");
+        await page.waitForNavigation();
+
+        // const data = JSON.stringify([userMail, password, otpSecret, new Date().toString()]);
+        // Utility.appendStepSummary(data);
         headless && process.exit();
         return;
     }
