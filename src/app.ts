@@ -418,6 +418,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         await page.type("(//input[@placeholder='密码'])[2]", password);
         await page.click("//input[@type='checkbox']");
         await page.click("//button[contains(.,'注册')]");
+        await page.waitForNavigation();
 
         logger.info([userMail, password]);
 
@@ -439,7 +440,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     if (ENABLE_DOCKER_REGISTER) {
         const page = await chrome.newPage();
         await page.goto("https://app.docker.com/");
-        await Utility.waitForSeconds(MAX_TIMEOUT);
         await page.click("//a[@id='signup']");
         await page.waitForNavigation();
         // await page.click("//button[text()='Personal']");
