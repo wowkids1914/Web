@@ -11,6 +11,7 @@ import retry from 'async-retry';
 import { authenticator } from 'otplib';
 import githubAnnotation from './annotations.js';
 import { Redis } from '@upstash/redis';
+import clipboard from "clipboardy";
 
 const { ENABLE_OUTLOOK_REGISTER, ENABLE_PROTON_REGISTER, ENABLE_CHATGPT_REGISTER, ENABLE_DENGTA_REGISTER, ENABLE_DOCKER_REGISTER, UPSTASH_REDIS_URL, UPSTASH_REDIS_TOKEN } = process.env;
 const OUTLOOK_REGISTER_LIMIT = Number(process.env.OUTLOOK_REGISTER_LIMIT);
@@ -424,11 +425,9 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         await page.click("//button[contains(.,'登入')]");
 
         await page.click("//div[text()='一键订阅']");
-        logger.info("1111111111111111111111111111111111111");
         await page.click("//div[text()='复制订阅地址']");
-        logger.info("2222222222222222222222222222222222222");
 
-        const url = await page.evaluate(() => navigator.clipboard.readText());
+        const url = await clipboard.read();
 
         const data = JSON.stringify([userMail, password, url, new Date().toString()]);
         Utility.appendStepSummary(data);
