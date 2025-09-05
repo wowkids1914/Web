@@ -192,6 +192,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
             if (process.uptime() > 180) {
                 githubAnnotation('error', "验证失败");
+                await screenshotAllPages();
                 process.exit(1);
             }
         }
