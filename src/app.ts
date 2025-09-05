@@ -39,7 +39,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         // devtools: true,
         args: [
             '--lang=en-US',
-            '--font-render-hinting=medium',
             '--window-size=1920,1080',
             '--disable-blink-features=AutomationControlled',
             // headless 模式下，Puppeteer 的默认 User-Agent 会包含 "HeadlessChrome" 字样，容易被识别为机器人。
@@ -213,14 +212,11 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         const consentCheckInterval = setInterval(async () => {
             try {
                 for (const frame of outlookPage.frames()) {
-                    if (await frame.title() == 'Inapp UnifiedConsent') {
-                        const ok = await frame.$("//button[@id='unified-consent-continue-button' and not(@disabled)]");
-                        if (ok) {
-                            await ok.click();
-                            logger.info("点击了OK按钮");
-                            clearInterval(consentCheckInterval);
-                        }
-
+                    const ok = await frame.$("//button[@id='unified-consent-continue-button' and not(@disabled)]");
+                    if (ok) {
+                        await ok.click();
+                        logger.info("点击了OK按钮");
+                        clearInterval(consentCheckInterval);
                         return;
                     }
                 }
@@ -428,7 +424,9 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         await page.click("//button[contains(.,'登入')]");
 
         await page.click("//div[text()='一键订阅']");
+        logger.info("1111111111111111111111111111111111111");
         await page.click("//div[text()='复制订阅地址']");
+        logger.info("2222222222222222222222222222222222222");
 
         const url = await page.evaluate(() => navigator.clipboard.readText());
 
