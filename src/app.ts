@@ -39,6 +39,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         // devtools: true,
         args: [
             '--lang=en-US',
+            '--font-render-hinting=medium',
             '--window-size=1920,1080',
             '--disable-blink-features=AutomationControlled',
             // headless 模式下，Puppeteer 的默认 User-Agent 会包含 "HeadlessChrome" 字样，容易被识别为机器人。
