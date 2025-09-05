@@ -11,7 +11,6 @@ import retry from 'async-retry';
 import { authenticator } from 'otplib';
 import githubAnnotation from './annotations.js';
 import { Redis } from '@upstash/redis';
-import clipboard from "clipboardy";
 
 const { ENABLE_OUTLOOK_REGISTER, ENABLE_PROTON_REGISTER, ENABLE_CHATGPT_REGISTER, ENABLE_DENGTA_REGISTER, ENABLE_DOCKER_REGISTER, UPSTASH_REDIS_URL, UPSTASH_REDIS_TOKEN } = process.env;
 const OUTLOOK_REGISTER_LIMIT = Number(process.env.OUTLOOK_REGISTER_LIMIT);
@@ -399,6 +398,9 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
     if (ENABLE_DENGTA_REGISTER) {
         // 获取灯塔 Cloud最新网址请发邮件至: dengtacloud@gmail.com
+        const context = chrome.defaultBrowserContext();
+        await context.overridePermissions("https://dengta.xn--xhq8sm16c5ls.com", ["clipboard-read", "clipboard-write"]);
+
         const page = await chrome.newPage();
         await page.goto("https://dengta.xn--xhq8sm16c5ls.com/#/register");
         await page.type("//input[@placeholder='邮箱']", userMail.split('@')[0]);
@@ -428,9 +430,9 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         await page.click("//div[text()='一键订阅']");
         await page.click("//div[text()='复制订阅地址']");
 
-        const url = await clipboard.read();
 
-        const data = JSON.stringify([userMail, password, url, new Date().toString()]);
+
+        const data = JSON.stringify([userMail, password, new Date().toString()]);
         Utility.appendStepSummary(data);
         headless && process.exit();
         return;

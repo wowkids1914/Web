@@ -54,7 +54,7 @@ jobs:
 
       - name: 运行
         run: |
-          sudo apt install -y fonts-noto-cjk xsel
+          sudo apt install -y fonts-noto-cjk
         
           yarn
           npx puppeteer browsers install firefox
