@@ -12,7 +12,7 @@ import { authenticator } from 'otplib';
 import githubAnnotation from './annotations.js';
 import { Redis } from '@upstash/redis';
 
-const { ENABLE_OUTLOOK_REGISTER, ENABLE_PROTON_REGISTER, ENABLE_CHATGPT_REGISTER, ENABLE_DOCKER_REGISTER, UPSTASH_REDIS_URL, UPSTASH_REDIS_TOKEN } = process.env;
+const { ENABLE_OUTLOOK_REGISTER, ENABLE_PROTON_REGISTER, ENABLE_CHATGPT_REGISTER, ENABLE_DENGTA_REGISTER, ENABLE_DOCKER_REGISTER, UPSTASH_REDIS_URL, UPSTASH_REDIS_TOKEN } = process.env;
 const OUTLOOK_REGISTER_LIMIT = Number(process.env.OUTLOOK_REGISTER_LIMIT);
 
 const redis = new Redis({
@@ -151,6 +151,8 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             process.exit(1);
         }
 
+        await Utility.waitForSeconds(5);
+
         const button = await outlookPage.$x("//span[text()='Press and hold the button.']");
         const rect = await outlookPage.evaluate(el => {
             const { x, y, width, height } = el.getBoundingClientRect();
@@ -158,8 +160,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         }, button);
 
         logger.info("等待验证真人", rect);
-
-        await Utility.waitForSeconds(5);
 
         while (true) {
             if (OUTLOOK_REGISTER_LIMIT) {
@@ -292,14 +292,12 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             await protonPage.$x("//button[.//span[text()='CAPTCHA']]", { hidden: true, timeout: MAX_TIMEOUT });
         }
 
+        await protonPage.click("//input[@id='understood-recovery-necessity']", { timeout: MAX_TIMEOUT });
+        await protonPage.click("//button[text()='Continue' and not(@disabled)]");
         // Set a display name
         await protonPage.click("//button[text()='Continue']");
-        // Set up a recovery method
-        await protonPage.click("//button[text()='Maybe later']");
-        // Warning
-        await protonPage.click("//button[text()='Confirm']");
         // Welcome to Proton Mail
-        await protonPage.click("//button[text()=\"Let's get started\"]");
+        await protonPage.click("//button[text()=\"Let's get started\"]", { timeout: MAX_TIMEOUT });
         await protonPage.click("//button[text()='Maybe later']");
         await protonPage.click("//button[text()='Next']");
         await protonPage.click("//button[text()='Use this']");
@@ -328,9 +326,27 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         await protonPage.click("//button[text()='Verify']");
 
         await protonPage.goto("https://mail.proton.me/u/0");
-        logger.info("Proton Mail 设置完成");
+        logger.info("Proton Recovery 设置完成");
 
-        const data = JSON.stringify([protonMail.split('@')[0], password, new Date().toString()]);
+        logger.info([protonMail, password]);
+
+        await protonPage.goto("https://account.proton.me/u/0/mail/account-password");
+        await protonPage.click("//label[@for='twoFactorToggle']");
+        await protonPage.type("//input[@id='password']", password);
+        await protonPage.click("//button[text()='Authenticate']");
+        await protonPage.click("//button[text()='Next']");
+
+        await protonPage.click("//button[text()='Enter key manually instead']");
+        const otpSecret = await protonPage.textContent("//code[@data-testid='totp:secret-key']");
+        const otp = authenticator.generate(otpSecret);
+        await protonPage.click("//button[text()='Next']");
+        for (let i = 0; i < 6; i++) {
+            await protonPage.type(`//input[@aria-label='Enter verification code. Digit ${i + 1}.']`, otp[i]);
+        }
+        await protonPage.click("//button[text()='Submit']");
+        await protonPage.click("//button[text()='Close']");
+
+        const data = JSON.stringify([protonMail.split('@')[0], password, otpSecret, new Date().toString()]);
         Utility.appendStepSummary(data);
         headless && process.exit();
         return;
@@ -382,9 +398,48 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         return;
     }
 
+    if (ENABLE_DENGTA_REGISTER) {
+        // 获取灯塔 Cloud最新网址请发邮件至: dengtacloud@gmail.com
+        const page = await chrome.newPage();
+        await page.goto("https://dengta.xn--xhq8sm16c5ls.com/#/register");
+        await page.type("//input[@placeholder='邮箱']", userMail.split('@')[0]);
+        await page.select("//select[@class='form-control form-control-alt']", "outlook.com");
+        await page.click("//button[contains(.,'发送')]");
+
+        await mailPage.bringToFront();
+        await mailPage.goto("https://outlook.live.com/mail/0/junkemail");
+        const text = await mailPage.textContent("//span[contains(text(),'您的验证码是')]", { timeout: MAX_TIMEOUT });
+        const code = text.match(/\d{6}/)[0];
+        logger.info("收到验证邮件", code);
+
+        await page.bringToFront();
+        await page.type("//input[@placeholder='邮箱验证码']", code);
+        await page.type("(//input[@placeholder='密码'])[1]", password);
+        await page.type("(//input[@placeholder='密码'])[2]", password);
+        await page.click("//input[@type='checkbox']");
+        await page.click("//button[contains(.,'注册')]");
+
+        logger.info([userMail, password]);
+
+        await page.type("//input[@placeholder='邮箱']", userMail);
+        await page.type("//input[@placeholder='密码']", password);
+        await page.click("//button[contains(.,'登入')]");
+
+        await page.click("//div[text()='一键订阅']");
+        await page.click("//div[text()='复制订阅地址']");
+
+        const url = await page.evaluate(() => navigator.clipboard.readText());
+
+        const data = JSON.stringify([userMail, password, url, new Date().toString()]);
+        Utility.appendStepSummary(data);
+        headless && process.exit();
+        return;
+    }
+
     if (ENABLE_DOCKER_REGISTER) {
         const page = await chrome.newPage();
         await page.goto("https://app.docker.com/");
+        await Utility.waitForSeconds(MAX_TIMEOUT);
         await page.click("//a[@id='signup']");
         await page.waitForNavigation();
         // await page.click("//button[text()='Personal']");
@@ -538,10 +593,8 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
     logger.info({ otp: otpSecret });
 
-    const otp = authenticator.generate(otpSecret);
-
     await (await page.$x("//button[@data-close-dialog-id='two-factor-setup-verification-mashed-secret']")).click();
-    await (await page.$x("//input[@name='otp']")).type(otp);
+    await (await page.$x("//input[@name='otp']")).type(authenticator.generate(otpSecret));
 
     await Utility.waitForSeconds(1);
     await (await page.$x("//button[@data-action='click:two-factor-setup-recovery-codes#onDownloadClick']")).click();
