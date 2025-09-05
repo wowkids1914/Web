@@ -430,9 +430,9 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         await page.click("//div[text()='一键订阅']");
         await page.click("//div[text()='复制订阅地址']");
 
+        const url = await page.evaluate(() => navigator.clipboard.readText());
 
-
-        const data = JSON.stringify([userMail, password, new Date().toString()]);
+        const data = JSON.stringify([userMail, password, url, new Date().toString()]);
         Utility.appendStepSummary(data);
         headless && process.exit();
         return;
