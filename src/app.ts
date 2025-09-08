@@ -455,7 +455,32 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         return;
     }
 
-    const page = await chrome.newPage();
+    const firefox = os.platform() != 'linux' && await puppeteer.launch({
+        browser: "firefox",
+        headless,
+        defaultViewport: null,
+        protocolTimeout: MAX_TIMEOUT,
+        slowMo: 10,
+        devtools: true,
+        args: [
+            '--lang=en-US',
+            '--width=1920', '--height=1080',
+            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0'
+        ]
+    });
+
+    const page = (await firefox?.pages?.())?.[0] || await chrome.newPage();
+
+    if (firefox) {
+        logger.info(firefox.process().spawnfile, await firefox.version(), firefox.wsEndpoint());
+
+        const viewportSize = await mailPage.evaluate(() => ({
+            width: window.innerWidth,
+            height: window.innerHeight
+        }));
+
+        await page.setViewport(viewportSize);
+    }
 
     await page.goto("https://github.com/signup");
     await (await page.$x("//input[@placeholder='Email']")).type(userMail);
