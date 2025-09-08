@@ -465,8 +465,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         devtools: true,
         args: [
             '--lang=en-US',
-            '--width=1920', '--height=1080',
-            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0'
+            '--width=1920', '--height=1080'
         ]
     });
 
@@ -541,6 +540,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
     if (frame.url() != "https://github.com/account_verifications") {
         logger.info("需要验证", page.url());
+        await frame.click("//button[contains(., 'Visual puzzle')]");
 
         if (headless) {
             githubAnnotation('error', "无法自动验证");
@@ -548,7 +548,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             process.exit(1);
         }
 
-        await frame.click("//button[contains(., 'Visual puzzle')]");
         await frame.waitForSelector("//button[contains(., 'Submit')]", { timeout: MAX_TIMEOUT });
         logger.info("等待验证真人");
         await page.waitForSelector("//h2[text()='Confirm your email address']", { timeout: MAX_TIMEOUT });
