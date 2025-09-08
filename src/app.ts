@@ -464,9 +464,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         devtools: true,
         args: [
             '--lang=en-US',
-            '--width=1920', '--height=1080',
-            // headless 模式下，Puppeteer 的默认 User-Agent 会包含 "HeadlessChrome" 字样，容易被识别为机器人。
-            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0'
+            '--width=1920', '--height=1080'
         ]
     });
 
