@@ -41,8 +41,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             '--lang=en-US',
             '--window-size=1920,1080',
             '--disable-blink-features=AutomationControlled',
-            // headless 模式下，Puppeteer 的默认 User-Agent 会包含 "HeadlessChrome" 字样，容易被识别为机器人。
-            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',

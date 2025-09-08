@@ -42,6 +42,9 @@ Page.prototype.goto = async function (
     url: string,
     options?: GoToOptions
 ): Promise<HTTPResponse | null> {
+    const defaultUA = await this.browser().userAgent();
+    await this.setUserAgent(defaultUA.replace('HeadlessChrome/', 'Chrome/'));
+
     let retries = options?.retries ?? 5;
     while (retries-- > 0) {
         try {
