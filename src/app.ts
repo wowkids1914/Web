@@ -462,7 +462,6 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         defaultViewport: null,
         protocolTimeout: MAX_TIMEOUT,
         slowMo: 10,
-        devtools: true,
         args: [
             '--lang=en-US',
             '--width=1920', '--height=1080'
