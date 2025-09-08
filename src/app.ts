@@ -282,6 +282,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
             if (headless) {
                 githubAnnotation('error', "无法自动验证");
+                await screenshotAllPages();
                 process.exit(1);
             }
 
@@ -543,6 +544,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
 
         if (headless) {
             githubAnnotation('error', "无法自动验证");
+            await screenshotAllPages();
             process.exit(1);
         }
 
