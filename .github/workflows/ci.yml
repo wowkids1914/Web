@@ -21,7 +21,7 @@ env:
   OUTLOOK_REGISTER_LIMIT: ${{ inputs.register_limit }}
   # ENABLE_CHATGPT_REGISTER: 1
   # ENABLE_PROTON_REGISTER: 1
-  ENABLE_DENGTA_REGISTER: 1
+  # ENABLE_DENGTA_REGISTER: 1
 
 jobs:
   prepare-matrix:
