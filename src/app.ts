@@ -456,30 +456,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         return;
     }
 
-    const firefox = os.platform() != 'linux' && await puppeteer.launch({
-        browser: "firefox",
-        headless,
-        defaultViewport: null,
-        protocolTimeout: MAX_TIMEOUT,
-        slowMo: 10,
-        args: [
-            '--lang=en-US',
-            '--width=1920', '--height=1080'
-        ]
-    });
-
-    const page = (await firefox?.pages?.())?.[0] || await chrome.newPage();
-
-    if (firefox) {
-        logger.info(firefox.process().spawnfile, await firefox.version(), firefox.wsEndpoint());
-
-        const viewportSize = await mailPage.evaluate(() => ({
-            width: window.innerWidth,
-            height: window.innerHeight
-        }));
-
-        await page.setViewport(viewportSize);
-    }
+    const page = await chrome.newPage();
 
     await page.goto("https://github.com/signup");
     await (await page.$x("//input[@placeholder='Email']")).type(userMail);
