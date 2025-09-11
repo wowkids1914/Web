@@ -1,0 +1,95 @@
+name: ChatGPT
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_count:
+        description: '任务数量'
+        default: '1'
+        type: string
+      register_limit:
+        description: '注册限制'
+        default: 0
+        type: number
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TZ: Asia/Shanghai
+  UPSTASH_REDIS_URL: https://arriving-drake-53801.upstash.io
+  UPSTASH_REDIS_TOKEN: AdIpAAIncDE0OTNiMzNiNDQyYzM0NTMyOTMwY2E3Yzk4YzQ1YTAyZXAxNTM4MDE
+  OUTLOOK_REGISTER_LIMIT: ${{ inputs.register_limit }}
+  ENABLE_CHATGPT_REGISTER: 1
+  # ENABLE_PROTON_REGISTER: 1
+  # ENABLE_DENGTA_REGISTER: 1
+
+jobs:
+  prepare-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      ids: ${{ steps.set-matrix.outputs.ids }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set-matrix
+        run: |
+          count=${{ inputs.task_count }}
+          ids=$(jq -c -n --argjson n "$count" '[range(1; $n+1)]')
+          echo "ids=$ids" >> $GITHUB_OUTPUT
+
+          curl -X POST \
+            "$UPSTASH_REDIS_URL/del/OUTLOOK_REGISTER_LIMIT" \
+            -H "Authorization: Bearer $UPSTASH_REDIS_TOKEN"
+
+  concurrent-jobs:
+    needs: prepare-matrix
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      max-parallel: 20
+      fail-fast: false
+      matrix:
+        job_id: ${{ fromJson(needs.prepare-matrix.outputs.ids) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 运行
+        run: |
+          sudo apt install -y fonts-noto-cjk
+        
+          yarn
+          npx puppeteer browsers install firefox
+          yarn build
+          timeout -k 30s 300s yarn dev
+
+          cp $GITHUB_STEP_SUMMARY step-summary
+          truncate -s 0 $GITHUB_STEP_SUMMARY
+
+      - name: 上传 step summary artifact
+        if: always() && hashFiles('step-summary') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: step-summary-${{ matrix.job_id }}
+          path: step-summary
+
+      - name: 上传 images 文件夹
+        if: always() && hashFiles('images/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: images-${{ matrix.job_id }}
+          path: images/
+
+  collect-summary:
+    runs-on: ubuntu-latest
+    needs: concurrent-jobs
+    steps:
+      - name: 下载所有 job 的 step summary
+        uses: actions/download-artifact@v4
+        with:
+          path: summaries
+
+      - name: 合并 step summary
+        run: |
+          # cat summaries/step-summary-*/* > $GITHUB_STEP_SUMMARY
+          jq -s '.' summaries/step-summary-*/* > $GITHUB_STEP_SUMMARY
