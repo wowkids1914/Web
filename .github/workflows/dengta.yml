@@ -1,3 +1,5 @@
+name: DENGTA
+
 on:
   workflow_dispatch:
     inputs:
