@@ -359,7 +359,7 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         await page.waitForNavigation();
 
         await page.type("//input[@name='email']", userMail);
-        await page.click("//button[contains(., 'Continue')]");
+        await page.click("//button[text()='Continue']");
         await page.waitForNavigation();
         await page.type("//input[@name='new-password']", password);
         await page.click("//button[contains(., 'Continue')]");
