@@ -1,5 +1,3 @@
-name: ChatGPT
-
 on:
   workflow_dispatch:
     inputs:
@@ -12,7 +10,7 @@ on:
         default: 0
         type: number
 
-run-name: 'GPT ${{ inputs.task_count }} ${{ inputs.register_limit }}'
+run-name: 'DENGTA ${{ inputs.task_count }} ${{ inputs.register_limit }}'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -23,9 +21,9 @@ env:
   UPSTASH_REDIS_URL: https://arriving-drake-53801.upstash.io
   UPSTASH_REDIS_TOKEN: AdIpAAIncDE0OTNiMzNiNDQyYzM0NTMyOTMwY2E3Yzk4YzQ1YTAyZXAxNTM4MDE
   OUTLOOK_REGISTER_LIMIT: ${{ inputs.register_limit }}
-  ENABLE_CHATGPT_REGISTER: 1
+  # ENABLE_CHATGPT_REGISTER: 1
   # ENABLE_PROTON_REGISTER: 1
-  # ENABLE_DENGTA_REGISTER: 1
+  ENABLE_DENGTA_REGISTER: 1
 
 jobs:
   prepare-matrix:
