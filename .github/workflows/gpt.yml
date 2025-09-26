@@ -12,6 +12,8 @@ on:
         default: 0
         type: number
 
+run-name: '部署 ${{ inputs.task_count }} ${{ inputs.register_limit }}'
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
