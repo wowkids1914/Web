@@ -11,8 +11,14 @@ def get_directory_list(path):
         result = []
         for item in items:
             item_path = os.path.join(path, item)
+            item_info = {"name": item, "path": item_path}
+            
             if os.path.isdir(item_path):
-                result.append({"name": item, "path": item_path})
+                item_info["type"] = "folder"
+            else:
+                item_info["type"] = "file"
+                
+            result.append(item_info)
         return result
     except Exception as e:
         return {"error": str(e)}
