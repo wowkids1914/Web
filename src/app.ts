@@ -398,6 +398,14 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
     }
 
     if (ENABLE_DENGTA_REGISTER) {
+
+        {
+            const data = JSON.stringify([userMail, password, new Date().toString()]);
+            Utility.appendStepSummary(data);
+            headless && process.exit();
+            return;
+        }
+
         // 获取灯塔 Cloud最新网址请发邮件至: dengtacloud@gmail.com
         const context = chrome.defaultBrowserContext();
         await context.overridePermissions("https://dengta.xn--xhq8sm16c5ls.com", ["clipboard-read", "clipboard-write"]);
