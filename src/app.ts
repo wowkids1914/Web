@@ -194,15 +194,15 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
             }
         }
 
-        if (OUTLOOK_REGISTER_LIMIT) {
-            const value: number = await redis.get("OUTLOOK_REGISTER_LIMIT");
-            if (value >= OUTLOOK_REGISTER_LIMIT) {
-                githubAnnotation('error', "已达到注册上限");
-                process.exit(1);
-            }
+        // if (OUTLOOK_REGISTER_LIMIT) {
+        //     const value: number = await redis.get("OUTLOOK_REGISTER_LIMIT");
+        //     if (value >= OUTLOOK_REGISTER_LIMIT) {
+        //         githubAnnotation('error', "已达到注册上限");
+        //         process.exit(1);
+        //     }
 
-            await redis.incr("OUTLOOK_REGISTER_LIMIT");
-        }
+        //     await redis.incr("OUTLOOK_REGISTER_LIMIT");
+        // }
 
         logger.info("验证通过", outlookPage.url());
         await outlookPage.$x("//span[@id='EmptyState_MainMessage']", { timeout: MAX_TIMEOUT });
