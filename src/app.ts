@@ -15,10 +15,10 @@ import { Redis } from '@upstash/redis';
 const { ENABLE_OUTLOOK_REGISTER, ENABLE_PROTON_REGISTER, ENABLE_CHATGPT_REGISTER, ENABLE_DENGTA_REGISTER, ENABLE_DOCKER_REGISTER, UPSTASH_REDIS_URL, UPSTASH_REDIS_TOKEN } = process.env;
 const OUTLOOK_REGISTER_LIMIT = Number(process.env.OUTLOOK_REGISTER_LIMIT);
 
-const redis = new Redis({
-    url: UPSTASH_REDIS_URL,
-    token: UPSTASH_REDIS_TOKEN
-});
+// const redis = new Redis({
+//     url: UPSTASH_REDIS_URL,
+//     token: UPSTASH_REDIS_TOKEN
+// });
 
 declare const protonMail: string;
 declare const protonPage: Page;
@@ -160,13 +160,13 @@ const MAX_TIMEOUT = Math.pow(2, 31) - 1;
         logger.info("等待验证真人", rect);
 
         while (true) {
-            if (OUTLOOK_REGISTER_LIMIT) {
-                const value: number = await redis.get("OUTLOOK_REGISTER_LIMIT");
-                if (value >= OUTLOOK_REGISTER_LIMIT) {
-                    githubAnnotation('error', "已达到注册上限");
-                    process.exit(1);
-                }
-            }
+            // if (OUTLOOK_REGISTER_LIMIT) {
+            //     const value: number = await redis.get("OUTLOOK_REGISTER_LIMIT");
+            //     if (value >= OUTLOOK_REGISTER_LIMIT) {
+            //         githubAnnotation('error', "已达到注册上限");
+            //         process.exit(1);
+            //     }
+            // }
 
             logger.info("模拟移动鼠标");
 
